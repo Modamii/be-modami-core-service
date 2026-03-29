@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(pod install:*)",
+      "Bash(jobs -l)",
+      "Bash(pkill -f \"xcodebuild|react-native run-ios\")",
+      "Bash(mv RnModamiService Modami)",
+      "Bash(mv RnModamiService.xcodeproj Modami.xcodeproj)",
+      "Bash(mv RnModamiService.xcworkspace Modami.xcworkspace)",
+      "Bash(mv Modami.xcodeproj/xcshareddata/xcschemes/RnModamiService.xcscheme Modami.xcodeproj/xcshareddata/xcschemes/Modami.xcscheme)",
+      "Bash(sed -i '' 's/RnModamiService/Modami/g' Modami.xcodeproj/xcshareddata/xcschemes/Modami.xcscheme)",
+      "Bash(sed -i '' 's/RnModamiService/Modami/g' Modami.xcworkspace/contents.xcworkspacedata)",
+      "Bash(sed -i '' \"s/target ''RnModamiService''/target ''Modami''/g\" Podfile)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git reset:*)",
+      "Bash(node -e \"require\\(''''react-native-heroicons''''\\)\")",
+      "Bash(grep:*)",
+      "mcp__ide__getDiagnostics",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:react-hook-form.com)",
+      "WebFetch(domain:echobind.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:medium.com)",
+      "Bash(wc:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:gorhom.dev)",
+      "WebFetch(domain:ui.gorhom.dev)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "Bash(sed -n '1,30p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/home/home.screen.tsx)",
+      "Bash(sed -n '90,110p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/saved/saved.screen.tsx)",
+      "Bash(sed -n '1,20p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/seller/seller-detail.screen.tsx)",
+      "Bash(sed -n '50,70p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/saved/saved.screen.tsx)",
+      "Bash(sed -n '55,70p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/seller/seller-detail.screen.tsx)"
+    ]
+  }
+}

@@ -1,0 +1,2048 @@
+basePath: /v1/core-services
+definitions:
+  github_com_modami_core-service_internal_domain.CategoryOrder:
+    properties:
+      id:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  github_com_modami_core-service_internal_dto.CancelOrderRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  github_com_modami_core-service_internal_dto.CreateOrderRequest:
+    properties:
+      product_id:
+        type: string
+      shipping:
+        $ref: '#/definitions/github_com_modami_core-service_internal_dto.CreateShippingInput'
+    required:
+    - product_id
+    - shipping
+    type: object
+  github_com_modami_core-service_internal_dto.CreateProductRequest:
+    properties:
+      brand:
+        type: string
+      category_id:
+        type: string
+      color:
+        type: string
+      condition:
+        enum:
+        - new
+        - like_new
+        - good
+        - fair
+        type: string
+      credit_cost:
+        type: integer
+      description:
+        maxLength: 5000
+        minLength: 20
+        type: string
+      hashtags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      images:
+        items:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+        maxItems: 6
+        minItems: 1
+        type: array
+      material:
+        type: string
+      price:
+        minimum: 1000
+        type: integer
+      size:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 5
+        type: string
+    required:
+    - category_id
+    - condition
+    - description
+    - images
+    - price
+    - size
+    - title
+    type: object
+  github_com_modami_core-service_internal_dto.CreateShippingInput:
+    properties:
+      address:
+        type: string
+      district:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      province:
+        type: string
+      ward:
+        type: string
+    required:
+    - address
+    - district
+    - name
+    - phone
+    - province
+    - ward
+    type: object
+  github_com_modami_core-service_internal_dto.ImageInput:
+    properties:
+      height:
+        type: integer
+      position:
+        type: integer
+      url:
+        type: string
+      width:
+        type: integer
+    required:
+    - url
+    type: object
+  github_com_modami_core-service_internal_dto.ResubmitRequest:
+    properties:
+      brand:
+        type: string
+      category_id:
+        type: string
+      color:
+        type: string
+      condition:
+        enum:
+        - new
+        - like_new
+        - good
+        - fair
+        type: string
+      description:
+        maxLength: 5000
+        minLength: 20
+        type: string
+      hashtags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      images:
+        items:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+        maxItems: 6
+        minItems: 1
+        type: array
+      material:
+        type: string
+      note:
+        type: string
+      price:
+        minimum: 1000
+        type: integer
+      size:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 5
+        type: string
+    type: object
+  github_com_modami_core-service_internal_dto.ShipOrderRequest:
+    properties:
+      shipping_provider:
+        type: string
+      tracking_code:
+        type: string
+    required:
+    - shipping_provider
+    - tracking_code
+    type: object
+  github_com_modami_core-service_internal_dto.UpdateProductRequest:
+    properties:
+      brand:
+        type: string
+      category_id:
+        type: string
+      color:
+        type: string
+      condition:
+        enum:
+        - new
+        - like_new
+        - good
+        - fair
+        type: string
+      credit_cost:
+        type: integer
+      description:
+        maxLength: 5000
+        minLength: 20
+        type: string
+      hashtags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      images:
+        items:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+        maxItems: 6
+        minItems: 1
+        type: array
+      material:
+        type: string
+      price:
+        minimum: 1000
+        type: integer
+      size:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 5
+        type: string
+    type: object
+  internal_adapter_handler.CreateCategoryRequest:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      name_vi:
+        type: string
+      parent_id:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+    required:
+    - name
+    - name_vi
+    - slug
+    type: object
+  internal_adapter_handler.CreatePackageRequest:
+    properties:
+      badge_name:
+        type: string
+      code:
+        type: string
+      credits_per_month:
+        type: integer
+      featured_slots:
+        type: integer
+      name:
+        type: string
+      price_monthly:
+        type: integer
+      price_yearly:
+        type: integer
+      priority_support:
+        type: boolean
+      search_boost:
+        type: boolean
+      search_priority:
+        type: boolean
+      sort_order:
+        type: integer
+      tier:
+        type: integer
+    required:
+    - code
+    - name
+    type: object
+  internal_adapter_handler.StandardErrorEnvelope:
+    properties:
+      error: {}
+      meta: {}
+      success:
+        type: boolean
+    type: object
+  internal_adapter_handler.StandardSuccessEnvelope:
+    properties:
+      data: {}
+      meta: {}
+      success:
+        type: boolean
+    type: object
+  internal_adapter_handler.UpdateCategoryRequest:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      name_vi:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: 'Core service: catalog, orders, master data, and seller APIs for the
+    Modami marketplace.'
+  title: Modami Core Service API
+  version: "1.0"
+paths:
+  /admin/categories:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_adapter_handler.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: create category'
+      tags:
+      - Admin
+  /admin/categories/{id}:
+    delete:
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: delete category'
+      tags:
+      - Admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_adapter_handler.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: update category'
+      tags:
+      - Admin
+  /admin/categories/{id}/toggle:
+    put:
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: toggle category active'
+      tags:
+      - Admin
+  /admin/categories/reorder:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Ordered ids
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/github_com_modami_core-service_internal_domain.CategoryOrder'
+          type: array
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: reorder categories'
+      tags:
+      - Admin
+  /admin/orders:
+    get:
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: list all orders'
+      tags:
+      - Admin
+  /admin/orders/{id}:
+    get:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: get order'
+      tags:
+      - Admin
+  /admin/orders/{id}/force-cancel:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reason
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.CancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: force cancel order'
+      tags:
+      - Admin
+  /admin/orders/{id}/force-complete:
+    put:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: force complete order'
+      tags:
+      - Admin
+  /admin/packages:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Package
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_adapter_handler.CreatePackageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: create package'
+      tags:
+      - Admin
+  /admin/packages/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Package fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_adapter_handler.CreatePackageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: update package'
+      tags:
+      - Admin
+  /admin/packages/{id}/toggle:
+    put:
+      parameters:
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: toggle package active'
+      tags:
+      - Admin
+  /categories:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: List categories
+      tags:
+      - Categories
+  /categories/{slug}:
+    get:
+      parameters:
+      - description: Category slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Get category by slug
+      tags:
+      - Categories
+  /categories/{slug}/children:
+    get:
+      parameters:
+      - description: Parent category slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: List child categories
+      tags:
+      - Categories
+  /hashtags/{tag}/products:
+    get:
+      parameters:
+      - description: 'Hashtag (without #)'
+        in: path
+        name: tag
+        required: true
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Products by hashtag
+      tags:
+      - Products
+  /hashtags/suggest:
+    get:
+      parameters:
+      - description: Prefix
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Suggest hashtags (autocomplete)
+      tags:
+      - Hashtags
+  /hashtags/trending:
+    get:
+      parameters:
+      - description: Max tags
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Trending hashtags
+      tags:
+      - Hashtags
+  /health:
+    get:
+      description: Returns service availability for probes
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Example: {\"status\":\"ok\"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - System
+  /orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Create order (purchase)
+      tags:
+      - Orders
+  /orders/{id}:
+    get:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - Orders
+  /orders/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reason
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.CancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Cancel order
+      tags:
+      - Orders
+  /orders/{id}/confirm:
+    put:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Seller confirms order
+      tags:
+      - Orders
+  /orders/{id}/events:
+    get:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Order timeline events
+      tags:
+      - Orders
+  /orders/{id}/receive:
+    put:
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Buyer confirms receipt
+      tags:
+      - Orders
+  /orders/{id}/ship:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tracking
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ShipOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Seller ships order
+      tags:
+      - Orders
+  /orders/my-purchases:
+    get:
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: List orders I purchased
+      tags:
+      - Orders
+  /orders/my-sales:
+    get:
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: List orders I sold
+      tags:
+      - Orders
+  /packages:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: List subscription packages
+      tags:
+      - Packages
+  /packages/{code}:
+    get:
+      parameters:
+      - description: Package code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Get package by code
+      tags:
+      - Packages
+  /products:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Create product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Delete product
+      tags:
+      - Products
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Get product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Update product
+      tags:
+      - Products
+  /products/{id}/archive:
+    post:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Archive product
+      tags:
+      - Products
+  /products/{id}/moderation:
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: List moderation history for product
+      tags:
+      - Products
+  /products/{id}/resubmit:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ResubmitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Resubmit rejected product
+      tags:
+      - Products
+  /products/{id}/similar:
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Max items (default 10, max 50)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Similar products
+      tags:
+      - Products
+  /products/{id}/submit:
+    post:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Submit product for review
+      tags:
+      - Products
+  /products/{id}/unarchive:
+    post:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Unarchive product
+      tags:
+      - Products
+  /products/{id}/view:
+    post:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Track product view
+      tags:
+      - Products
+  /products/featured:
+    get:
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Featured products
+      tags:
+      - Products
+  /products/feed:
+    get:
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Product feed (cursor)
+      tags:
+      - Products
+  /products/me:
+    get:
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: List my products (seller)
+      tags:
+      - Products
+  /products/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Category filter
+        in: query
+        name: category_id
+        type: string
+      - description: Condition
+        in: query
+        name: condition
+        type: string
+      - description: Brand
+        in: query
+        name: brand
+        type: string
+      - description: Min price
+        in: query
+        name: min_price
+        type: integer
+      - description: Max price
+        in: query
+        name: max_price
+        type: integer
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Search products (catalog)
+      tags:
+      - Search
+  /products/select:
+    get:
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Curated select products
+      tags:
+      - Products
+  /products/slug/{slug}:
+    get:
+      parameters:
+      - description: URL slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Get product by slug
+      tags:
+      - Products
+  /search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Category filter
+        in: query
+        name: category_id
+        type: string
+      - description: Condition
+        in: query
+        name: condition
+        type: string
+      - description: Brand
+        in: query
+        name: brand
+        type: string
+      - description: Min price
+        in: query
+        name: min_price
+        type: integer
+      - description: Max price
+        in: query
+        name: max_price
+        type: integer
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Search products (alias of GET /products/search)
+      tags:
+      - Search
+  /search/suggest:
+    get:
+      parameters:
+      - description: Prefix
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Hashtag suggestions (alias of GET /hashtags/suggest)
+      tags:
+      - Search
+  /search/trending:
+    get:
+      parameters:
+      - description: Max tags
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Trending hashtags (alias of GET /hashtags/trending)
+      tags:
+      - Search
+  /sellers/{id}:
+    get:
+      parameters:
+      - description: Seller user ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Public seller profile
+      tags:
+      - Sellers
+  /sellers/{id}/products:
+    get:
+      parameters:
+      - description: Seller user ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Seller's listed products
+      tags:
+      - Sellers
+  /sellers/{id}/reviews:
+    get:
+      parameters:
+      - description: Seller user ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Seller reviews
+      tags:
+      - Sellers
+  /sellers/{id}/stats:
+    get:
+      parameters:
+      - description: Seller user ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: Seller public stats
+      tags:
+      - Sellers
+  /sellers/{seller_id}/products:
+    get:
+      parameters:
+      - description: Seller user ID
+        in: path
+        name: seller_id
+        required: true
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+      summary: List products by seller
+      tags:
+      - Products
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
