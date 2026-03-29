@@ -3,7 +3,7 @@ package main
 // @title           Modami Core Service API
 // @version         1.0
 // @description     Core service: catalog, orders, master data, and seller APIs for the Modami marketplace.
-// @host            localhost:8080
+// @host            modami-core.techinsightsworld.com
 // @BasePath        /v1/core-services
 // @schemes         http https
 // @securityDefinitions.apikey BearerAuth
