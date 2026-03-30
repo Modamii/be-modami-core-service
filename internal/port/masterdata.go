@@ -18,14 +18,6 @@ type CategoryRepository interface {
 	IncrementProductCount(ctx context.Context, id bson.ObjectID, delta int64) error
 }
 
-type PackageRepository interface {
-	Create(ctx context.Context, p *domain.Package) error
-	GetByID(ctx context.Context, id bson.ObjectID) (*domain.Package, error)
-	GetByCode(ctx context.Context, code string) (*domain.Package, error)
-	Update(ctx context.Context, p *domain.Package) error
-	ListActive(ctx context.Context) ([]domain.Package, error)
-}
-
 type HashtagRepository interface {
 	Upsert(ctx context.Context, tag string, delta int64) error
 	ListTrending(ctx context.Context, limit int) ([]domain.Hashtag, error)

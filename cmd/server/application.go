@@ -33,9 +33,7 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	mongodb.EnsureIndexes(ctx, db)
 
 	productRepo := repository.NewProductRepository(db)
-	orderRepo := repository.NewOrderRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
-	packageRepo := repository.NewPackageRepository(db)
 	hashtagRepo := repository.NewHashtagRepository(db)
 	favoriteRepo := repository.NewFavoriteRepository(db)
 	savedProductRepo := repository.NewSavedProductRepository(db)
@@ -44,13 +42,10 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	reviewRepo := repository.NewReviewRepository(db)
 
 	productSvc := service.NewProductService(productRepo)
-	orderProductReader := service.NewOrderProductReader(productSvc)
-	orderSvc := service.NewOrderService(orderRepo, orderProductReader)
-	masterdataSvc := service.NewMasterdataService(categoryRepo, packageRepo, hashtagRepo)
+	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
 
 	productH := handler.NewProductHandler(productSvc)
-	orderH := handler.NewOrderHandler(orderSvc)
 	masterdataH := handler.NewMasterdataHandler(masterdataSvc)
 	sellerH := handler.NewSellerHandler(sellerSvc)
 	searchH := handler.NewSearchHandler(productH, masterdataH)
@@ -107,9 +102,6 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	v1.GET("/categories/:slug", masterdataH.GetCategory)
 	v1.GET("/categories/:slug/children", masterdataH.GetCategoryChildren)
 
-	v1.GET("/packages", masterdataH.ListPackages)
-	v1.GET("/packages/:code", masterdataH.GetPackage)
-
 	v1.GET("/hashtags/trending", masterdataH.TrendingHashtags)
 	v1.GET("/hashtags/suggest", masterdataH.SuggestHashtags)
 
@@ -129,34 +121,16 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		protected.POST("/products/:id/archive", productH.Archive)
 		protected.POST("/products/:id/unarchive", productH.Unarchive)
 
-		protected.POST("/orders", orderH.CreateOrder)
-		protected.GET("/orders/my-purchases", orderH.ListByBuyer)
-		protected.GET("/orders/my-sales", orderH.ListBySeller)
-		protected.GET("/orders/:id", orderH.GetByID)
-		protected.PUT("/orders/:id/confirm", orderH.Confirm)
-		protected.PUT("/orders/:id/ship", orderH.Ship)
-		protected.PUT("/orders/:id/receive", orderH.Receive)
-		protected.PUT("/orders/:id/cancel", orderH.Cancel)
-		protected.GET("/orders/:id/events", orderH.ListEvents)
 	}
 
 	admin := v1.Group("/admin")
 	admin.Use(auth.Required(), hmw.AdminOnly)
 	{
-		admin.GET("/orders", orderH.AdminListAll)
-		admin.GET("/orders/:id", orderH.AdminGetByID)
-		admin.PUT("/orders/:id/force-cancel", orderH.ForceCancel)
-		admin.PUT("/orders/:id/force-complete", orderH.ForceComplete)
-
 		admin.POST("/categories", masterdataH.AdminCreateCategory)
 		admin.PUT("/categories/:id", masterdataH.AdminUpdateCategory)
 		admin.PUT("/categories/:id/toggle", masterdataH.AdminToggleCategory)
 		admin.DELETE("/categories/:id", masterdataH.AdminDeleteCategory)
 		admin.PUT("/categories/reorder", masterdataH.AdminReorderCategories)
-
-		admin.POST("/packages", masterdataH.AdminCreatePackage)
-		admin.PUT("/packages/:id", masterdataH.AdminUpdatePackage)
-		admin.PUT("/packages/:id/toggle", masterdataH.AdminTogglePackage)
 	}
 
 	serviceName := strings.TrimSpace(cfg.Observability.ServiceName)

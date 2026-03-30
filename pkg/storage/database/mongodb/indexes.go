@@ -46,35 +46,6 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 		{Keys: bson.D{{"is_active", 1}, {"sort_order", 1}}},
 	})
 
-	// packages
-	createIndexes(ctx, db.Collection("packages"), []mongo.IndexModel{
-		{Keys: bson.D{{"code", 1}}, Options: options.Index().SetUnique(true)},
-		{Keys: bson.D{{"is_active", 1}, {"sort_order", 1}}},
-	})
-
-	// subscriptions
-	createIndexes(ctx, db.Collection("subscriptions"), []mongo.IndexModel{
-		{Keys: bson.D{{"user_id", 1}, {"status", 1}}},
-		{Keys: bson.D{{"user_id", 1}, {"end_date", -1}}},
-		{Keys: bson.D{{"status", 1}, {"end_date", 1}}},
-		{Keys: bson.D{{"status", 1}, {"auto_renew", 1}, {"end_date", 1}}},
-	})
-
-	// orders
-	createIndexes(ctx, db.Collection("orders"), []mongo.IndexModel{
-		{Keys: bson.D{{"order_code", 1}}, Options: options.Index().SetUnique(true)},
-		{Keys: bson.D{{"buyer_id", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"seller_id", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"product_id", 1}}},
-		{Keys: bson.D{{"status", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"status", 1}, {"seller_id", 1}, {"created_at", -1}}},
-	})
-
-	// order_events
-	createIndexes(ctx, db.Collection("order_events"), []mongo.IndexModel{
-		{Keys: bson.D{{"order_id", 1}, {"created_at", 1}}},
-	})
-
 	// favorites
 	createIndexes(ctx, db.Collection("favorites"), []mongo.IndexModel{
 		{Keys: bson.D{{"user_id", 1}, {"product_id", 1}}, Options: options.Index().SetUnique(true)},
@@ -110,36 +81,11 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 		{Keys: bson.D{{"seller_id", 1}, {"rating", 1}}},
 	})
 
-	// credit_transactions
-	createIndexes(ctx, db.Collection("credit_transactions"), []mongo.IndexModel{
-		{Keys: bson.D{{"user_id", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"ref_type", 1}, {"ref_id", 1}}},
-		{Keys: bson.D{{"type", 1}, {"created_at", -1}}},
-	})
-
-	// contact_unlocks
-	createIndexes(ctx, db.Collection("contact_unlocks"), []mongo.IndexModel{
-		{Keys: bson.D{{"buyer_id", 1}, {"product_id", 1}}, Options: options.Index().SetUnique(true)},
-		{Keys: bson.D{{"seller_id", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"buyer_id", 1}, {"created_at", -1}}},
-	})
-
 	// reports
 	createIndexes(ctx, db.Collection("reports"), []mongo.IndexModel{
 		{Keys: bson.D{{"status", 1}, {"created_at", -1}}},
 		{Keys: bson.D{{"target_type", 1}, {"target_id", 1}}},
 		{Keys: bson.D{{"reporter_id", 1}, {"created_at", -1}}},
-	})
-
-	// daily_stats
-	createIndexes(ctx, db.Collection("daily_stats"), []mongo.IndexModel{
-		{Keys: bson.D{{"date", -1}}, Options: options.Index().SetUnique(true)},
-	})
-
-	// seller_stats_snapshots
-	createIndexes(ctx, db.Collection("seller_stats_snapshots"), []mongo.IndexModel{
-		{Keys: bson.D{{"seller_id", 1}, {"period", -1}}, Options: options.Index().SetUnique(true)},
-		{Keys: bson.D{{"period", -1}, {"total_revenue", -1}}},
 	})
 
 	// hashtags

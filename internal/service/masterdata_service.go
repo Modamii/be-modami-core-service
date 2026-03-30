@@ -12,12 +12,11 @@ import (
 
 type MasterdataService struct {
 	categories port.CategoryRepository
-	packages   port.PackageRepository
 	hashtags   port.HashtagRepository
 }
 
-func NewMasterdataService(cats port.CategoryRepository, pkgs port.PackageRepository, tags port.HashtagRepository) *MasterdataService {
-	return &MasterdataService{categories: cats, packages: pkgs, hashtags: tags}
+func NewMasterdataService(cats port.CategoryRepository, tags port.HashtagRepository) *MasterdataService {
+	return &MasterdataService{categories: cats, hashtags: tags}
 }
 
 // domain.Category methods
@@ -108,57 +107,6 @@ func (s *MasterdataService) ReorderCategories(ctx context.Context, orders []doma
 
 func (s *MasterdataService) ListAllCategories(ctx context.Context) ([]domain.Category, error) {
 	return s.categories.ListAll(ctx, false)
-}
-
-// domain.Package methods
-func (s *MasterdataService) ListPackages(ctx context.Context) ([]domain.Package, error) {
-	return s.packages.ListActive(ctx)
-}
-
-func (s *MasterdataService) GetPackageByCode(ctx context.Context, code string) (*domain.Package, error) {
-	p, err := s.packages.GetByCode(ctx, code)
-	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to get package")
-	}
-	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"package not found")
-	}
-	return p, nil
-}
-
-func (s *MasterdataService) GetPackageByID(ctx context.Context, id string) (*domain.Package, error) {
-	oid, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid package id")
-	}
-	p, err := s.packages.GetByID(ctx, oid)
-	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to get package")
-	}
-	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"package not found")
-	}
-	return p, nil
-}
-
-func (s *MasterdataService) CreatePackage(ctx context.Context, p *domain.Package) error {
-	return s.packages.Create(ctx, p)
-}
-
-func (s *MasterdataService) UpdatePackage(ctx context.Context, p *domain.Package) error {
-	return s.packages.Update(ctx, p)
-}
-
-func (s *MasterdataService) TogglePackage(ctx context.Context, id string) (*domain.Package, error) {
-	p, err := s.GetPackageByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	p.IsActive = !p.IsActive
-	if err := s.packages.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to toggle package")
-	}
-	return p, nil
 }
 
 // domain.Hashtag methods
