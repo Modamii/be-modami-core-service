@@ -28,7 +28,7 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 		{Keys: bson.D{{"brand", 1}, {"status", 1}}},
 		{
 			Keys:    bson.D{{"deleted_at", 1}},
-			Options: options.Index().SetPartialFilterExpression(bson.D{{"deleted_at", bson.D{{"$ne", nil}}}}),
+			Options: options.Index().SetPartialFilterExpression(bson.D{{"deleted_at", bson.D{{"$exists", true}}}}),
 		},
 	})
 

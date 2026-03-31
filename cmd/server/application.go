@@ -75,7 +75,7 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	v1 := router.Group("/api/v1")
+	v1 := router.Group("/v1/core-services")
 
 	v1.GET("/products/feed", productH.Feed)
 	v1.GET("/products/featured", productH.Featured)
@@ -91,7 +91,6 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	v1.GET("/products/:id/similar", productH.Similar)
 	v1.GET("/products/:id/moderation", productH.GetModeration)
 	v1.POST("/products/:id/view", productH.TrackView)
-	v1.GET("/sellers/:seller_id/products", productH.SellerProducts)
 
 	v1.GET("/search", searchH.Search)
 	v1.GET("/search/suggest", searchH.Suggest)

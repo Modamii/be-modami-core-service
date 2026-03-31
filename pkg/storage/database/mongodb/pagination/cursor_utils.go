@@ -1,11 +1,13 @@
 package pagination
+
 import (
 	"encoding/base64"
 	"encoding/json"
 	"time"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
+
 func ParseMongoCursor(cursor string) (bson.M, error) {
 	data, err := base64.StdEncoding.DecodeString(cursor)
 	if err != nil {
@@ -19,7 +21,7 @@ func ParseMongoCursor(cursor string) (bson.M, error) {
 	for key, value := range parsed {
 		if strValue, ok := value.(string); ok {
 			if len(strValue) == 24 {
-				if objectID, err := primitive.ObjectIDFromHex(strValue); err == nil {
+				if objectID, err := bson.ObjectIDFromHex(strValue); err == nil {
 					converted[key] = objectID
 					continue
 				}
@@ -35,11 +37,12 @@ func ParseMongoCursor(cursor string) (bson.M, error) {
 	}
 	return converted, nil
 }
+
 func CreateMongoCursor(payload bson.M) (string, error) {
 	serializable := make(map[string]interface{})
 	for key, value := range payload {
 		switch v := value.(type) {
-		case primitive.ObjectID:
+		case bson.ObjectID:
 			serializable[key] = v.Hex()
 		case time.Time:
 			serializable[key] = v.Format(time.RFC3339)

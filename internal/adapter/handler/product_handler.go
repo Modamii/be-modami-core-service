@@ -292,7 +292,7 @@ func (h *ProductHandler) MyProducts(c *gin.Context) {
 // @Failure 500 {object} StandardErrorEnvelope
 // @Router /sellers/{seller_id}/products [get]
 func (h *ProductHandler) SellerProducts(c *gin.Context) {
-	sellerID := c.Param("seller_id")
+	sellerID := c.Param("id")
 	cp := pagination.ParseCursor(c.Request)
 	products, nextCursor, err := h.svc.SellerProducts(c.Request.Context(), sellerID, cp.Cursor, cp.Limit)
 	if err != nil {

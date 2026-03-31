@@ -75,13 +75,13 @@ func CursorFilter(cursor string, sortField string) (bson.D, error) {
 	}
 
 	return bson.D{
-		{"$or", bson.A{
+		{Key: "$or", Value: bson.A{
 			bson.D{
-				{sortField, bson.D{{"$lt", data.CreatedAt}}},
+				{Key: sortField, Value: bson.D{{Key: "$lt", Value: data.CreatedAt}}},
 			},
 			bson.D{
-				{sortField, data.CreatedAt},
-				{"_id", bson.D{{"$lt", oid}}},
+				{Key: sortField, Value: data.CreatedAt},
+				{Key: "_id", Value: bson.D{{Key: "$lt", Value: oid}}},
 			},
 		}},
 	}, nil
