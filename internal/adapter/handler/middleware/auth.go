@@ -1,141 +1,214 @@
 package middleware
 
 import (
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"math/big"
+	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
+	gokit "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 	"gitlab.com/lifegoeson-libs/pkg-gokit/response"
 )
 
-var errUnauthorized = apperror.New(apperror.CodeUnauthorized, "authentication required")
-
-type contextKey string
-
 const (
-	UserIDKey contextKey = "user_id"
-	RoleKey   contextKey = "role"
+	ctxKeyUserID = "user_id"
+	ctxKeyRole   = "user_role"
 )
 
+var errUnauthorized = gokit.New(gokit.CodeUnauthorized, "unauthorized")
+
+// Auth validates Keycloak-issued JWTs via JWKS.
 type Auth struct {
-	secret []byte
+	jwksURL string
+	cache   *jwksCache
 }
 
-func NewAuth(secret string) *Auth {
-	return &Auth{secret: []byte(secret)}
+// NewAuth creates an Auth middleware. If jwksURL is empty, tokens are parsed
+// without signature verification (dev/test mode).
+func NewAuth(jwksURL string) *Auth {
+	a := &Auth{
+		jwksURL: jwksURL,
+		cache:   &jwksCache{keys: make(map[string]*rsa.PublicKey)},
+	}
+	if jwksURL != "" {
+		_ = a.cache.refresh(jwksURL) // best-effort on startup
+	}
+	return a
 }
 
+// Required returns a gin middleware that enforces a valid Bearer token.
 func (a *Auth) Required() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
-		if header == "" {
+		raw := c.GetHeader("Authorization")
+		if raw == "" {
+			response.Err(c.Writer, errUnauthorized)
+			c.Abort()
+			return
+		}
+		parts := strings.SplitN(raw, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			response.Err(c.Writer, errUnauthorized)
+			c.Abort()
+			return
+		}
+		tokenStr := parts[1]
+
+		claims, err := a.parse(tokenStr)
+		if err != nil {
 			response.Err(c.Writer, errUnauthorized)
 			c.Abort()
 			return
 		}
 
-		tokenStr := strings.TrimPrefix(header, "Bearer ")
-		if tokenStr == header {
+		sub, _ := claims["sub"].(string)
+		if sub == "" {
 			response.Err(c.Writer, errUnauthorized)
 			c.Abort()
 			return
 		}
+		c.Set(ctxKeyUserID, sub)
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
+		// Extract first role from realm_access.roles
+		if ra, ok := claims["realm_access"].(map[string]interface{}); ok {
+			if rolesRaw, ok := ra["roles"].([]interface{}); ok && len(rolesRaw) > 0 {
+				for _, r := range rolesRaw {
+					if rs, ok := r.(string); ok && rs != "" {
+						c.Set(ctxKeyRole, rs)
+						break
+					}
+				}
 			}
-			return a.secret, nil
-		})
-		if err != nil || !token.Valid {
-			response.Err(c.Writer, errUnauthorized)
-			c.Abort()
-			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			response.Err(c.Writer, errUnauthorized)
-			c.Abort()
-			return
-		}
-
-		userID, _ := claims["user_id"].(string)
-		role, _ := claims["role"].(string)
-		if userID == "" {
-			response.Err(c.Writer, errUnauthorized)
-			c.Abort()
-			return
-		}
-		if role == "" {
-			role = "user"
-		}
-
-		c.Set(string(UserIDKey), userID)
-		c.Set(string(RoleKey), role)
 		c.Next()
 	}
 }
 
-// Optional extracts user info if token is present but does not require it.
-func (a *Auth) Optional() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
-		if header == "" {
-			c.Next()
-			return
-		}
-
-		tokenStr := strings.TrimPrefix(header, "Bearer ")
-		if tokenStr == header {
-			c.Next()
-			return
-		}
-
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return a.secret, nil
-		})
-		if err != nil || !token.Valid {
-			c.Next()
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.Next()
-			return
-		}
-
-		userID, _ := claims["user_id"].(string)
-		role, _ := claims["role"].(string)
-		if userID != "" {
-			c.Set(string(UserIDKey), userID)
-			c.Set(string(RoleKey), role)
-		}
-		c.Next()
-	}
-}
-
-// UserID returns the authenticated user id from the Gin context.
+// UserID returns the authenticated user's ID (JWT sub claim) from context.
 func UserID(c *gin.Context) string {
-	v, exists := c.Get(string(UserIDKey))
-	if !exists {
-		return ""
-	}
-	s, _ := v.(string)
-	return s
+	val, _ := c.Get(ctxKeyUserID)
+	id, _ := val.(string)
+	return id
 }
 
-// Role returns the role from the Gin context.
+// Role returns the first realm role of the authenticated user.
 func Role(c *gin.Context) string {
-	v, exists := c.Get(string(RoleKey))
-	if !exists {
-		return ""
+	val, _ := c.Get(ctxKeyRole)
+	role, _ := val.(string)
+	return role
+}
+
+// parse validates and extracts claims from a JWT token string.
+func (a *Auth) parse(tokenStr string) (jwt.MapClaims, error) {
+	if a.jwksURL == "" {
+		// Dev mode: no signature verification
+		token, _, err := jwt.NewParser().ParseUnverified(tokenStr, jwt.MapClaims{})
+		if err != nil {
+			return nil, err
+		}
+		return token.Claims.(jwt.MapClaims), nil
 	}
-	s, _ := v.(string)
-	return s
+
+	token, err := jwt.ParseWithClaims(tokenStr, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		kid, _ := token.Header["kid"].(string)
+		key, err := a.cache.get(kid, a.jwksURL)
+		if err != nil {
+			return nil, err
+		}
+		return key, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+	return token.Claims.(jwt.MapClaims), nil
+}
+
+// ---------------------------------------------------------------------------
+// JWKS cache
+// ---------------------------------------------------------------------------
+
+type jwksCache struct {
+	mu          sync.RWMutex
+	keys        map[string]*rsa.PublicKey
+	lastRefresh time.Time
+}
+
+func (c *jwksCache) get(kid string, url string) (*rsa.PublicKey, error) {
+	c.mu.RLock()
+	key, ok := c.keys[kid]
+	c.mu.RUnlock()
+	if ok {
+		return key, nil
+	}
+	// Unknown kid — refresh and retry once
+	if err := c.refresh(url); err != nil {
+		return nil, err
+	}
+	c.mu.RLock()
+	key, ok = c.keys[kid]
+	c.mu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("unknown key id: %s", kid)
+	}
+	return key, nil
+}
+
+func (c *jwksCache) refresh(url string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	resp, err := (&http.Client{Timeout: 10 * time.Second}).Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var jwks struct {
+		Keys []struct {
+			Kty string `json:"kty"`
+			Kid string `json:"kid"`
+			N   string `json:"n"`
+			E   string `json:"e"`
+		} `json:"keys"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+		return err
+	}
+
+	for _, k := range jwks.Keys {
+		if k.Kty != "RSA" {
+			continue
+		}
+		pub, err := parseRSAPublicKey(k.N, k.E)
+		if err != nil {
+			continue
+		}
+		c.keys[k.Kid] = pub
+	}
+	c.lastRefresh = time.Now()
+	return nil
+}
+
+func parseRSAPublicKey(nB64, eB64 string) (*rsa.PublicKey, error) {
+	nBytes, err := base64.RawURLEncoding.DecodeString(nB64)
+	if err != nil {
+		return nil, err
+	}
+	eBytes, err := base64.RawURLEncoding.DecodeString(eB64)
+	if err != nil {
+		return nil, err
+	}
+	n := new(big.Int).SetBytes(nBytes)
+	e := new(big.Int).SetBytes(eBytes)
+	return &rsa.PublicKey{N: n, E: int(e.Int64())}, nil
 }

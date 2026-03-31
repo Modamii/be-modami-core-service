@@ -59,7 +59,7 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	auth := hmw.NewAuth(cfg.Security.JWTSecret)
+	auth := hmw.NewAuth(cfg.Keycloak.JWKSUrl)
 
 	router := gin.New()
 	router.Use(gin.Recovery())

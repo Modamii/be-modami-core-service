@@ -11,7 +11,7 @@ import (
 type Config struct {
 	App           AppConfig           `mapstructure:"app"`
 	Mongo         MongoConfig         `mapstructure:"mongodb"`
-	Security      SecurityConfig      `mapstructure:"security"`
+	Keycloak      KeycloakConfig      `mapstructure:"keycloak"`
 	CORS          CORSConfig          `mapstructure:"cors"`
 	Redis         RedisConfig         `mapstructure:"redis"`
 	Kafka         KafkaConfig         `mapstructure:"kafka"`
@@ -60,8 +60,8 @@ type MongoConfig struct {
 	Database string `mapstructure:"database"`
 }
 
-type SecurityConfig struct {
-	JWTSecret string `mapstructure:"jwt_secret"`
+type KeycloakConfig struct {
+	JWKSUrl string `mapstructure:"jwks_url"`
 }
 
 type CORSConfig struct {
