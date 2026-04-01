@@ -206,7 +206,7 @@ definitions:
       sort_order:
         type: integer
     type: object
-host: localhost:8087
+host: modami-core.techinsightsworld.com
 info:
   contact: {}
   description: 'Core service: catalog, orders, master data, and seller APIs for the

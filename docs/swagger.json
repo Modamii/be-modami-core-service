@@ -10,7 +10,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8087",
+    "host": "modami-core.techinsightsworld.com",
     "basePath": "/v1/core-services",
     "paths": {
         "/admin/categories": {
