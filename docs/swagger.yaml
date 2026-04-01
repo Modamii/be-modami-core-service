@@ -7,6 +7,68 @@ definitions:
       sort_order:
         type: integer
     type: object
+  dto.AuthorDTO:
+    properties:
+      bio:
+        type: string
+      name:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.CreateBlogPostRequest:
+    properties:
+      author:
+        $ref: '#/definitions/dto.AuthorDTO'
+      body:
+        type: string
+      cover_caption:
+        type: string
+      cover_image:
+        type: string
+      cta_link:
+        type: string
+      depth:
+        enum:
+        - quick
+        - deep
+        type: string
+      hashtags:
+        items:
+          type: string
+        type: array
+      is_featured:
+        type: boolean
+      key_points:
+        items:
+          type: string
+        type: array
+      post_type:
+        type: string
+      read_time_min:
+        type: integer
+      references:
+        items:
+          type: string
+        type: array
+      series_name:
+        type: string
+      series_no:
+        type: integer
+      series_quarter:
+        type: string
+      slug:
+        type: string
+      subtitle:
+        type: string
+      title:
+        type: string
+      word_count:
+        type: integer
+    required:
+    - slug
+    - title
+    type: object
   dto.CreateProductRequest:
     properties:
       brand:
@@ -116,6 +178,56 @@ definitions:
         minLength: 5
         type: string
     type: object
+  dto.UpdateBlogPostRequest:
+    properties:
+      author:
+        $ref: '#/definitions/dto.AuthorDTO'
+      body:
+        type: string
+      cover_caption:
+        type: string
+      cover_image:
+        type: string
+      cta_link:
+        type: string
+      depth:
+        enum:
+        - quick
+        - deep
+        type: string
+      hashtags:
+        items:
+          type: string
+        type: array
+      is_featured:
+        type: boolean
+      key_points:
+        items:
+          type: string
+        type: array
+      post_type:
+        type: string
+      read_time_min:
+        type: integer
+      references:
+        items:
+          type: string
+        type: array
+      series_name:
+        type: string
+      series_no:
+        type: integer
+      series_quarter:
+        type: string
+      slug:
+        type: string
+      subtitle:
+        type: string
+      title:
+        type: string
+      word_count:
+        type: integer
+    type: object
   dto.UpdateProductRequest:
     properties:
       brand:
@@ -214,6 +326,162 @@ info:
   title: Modami Core Service API
   version: "1.0"
 paths:
+  /admin/blog/posts:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Blog post payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBlogPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — create blog post
+      tags:
+      - Blog Admin
+  /admin/blog/posts/{id}:
+    delete:
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — delete blog post
+      tags:
+      - Blog Admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBlogPostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — update blog post
+      tags:
+      - Blog Admin
+  /admin/blog/posts/{id}/publish:
+    post:
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — publish blog post
+      tags:
+      - Blog Admin
   /admin/categories:
     post:
       consumes:
@@ -395,6 +663,120 @@ paths:
       summary: 'Admin: reorder categories'
       tags:
       - Admin
+  /blog/hashtags/{tag}:
+    get:
+      description: Returns published blog posts that carry the given hashtag.
+      parameters:
+      - description: 'Hashtag (without #)'
+        in: path
+        name: tag
+        required: true
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      summary: Posts by hashtag
+      tags:
+      - Blog
+  /blog/posts:
+    get:
+      description: Returns published blog posts, optionally filtered by post_type.
+      parameters:
+      - description: Post type filter
+        in: query
+        name: post_type
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      summary: Paginated blog post list
+      tags:
+      - Blog
+  /blog/posts/{slug}:
+    get:
+      description: Returns the full content of a single published blog post.
+      parameters:
+      - description: URL slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      summary: Blog post detail by slug
+      tags:
+      - Blog
+  /blog/reports:
+    get:
+      description: Returns cursor-paginated trend report posts (post_type = "trend_report").
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      summary: Monthly trend report listing
+      tags:
+      - Blog
   /categories:
     get:
       produces:
@@ -463,6 +845,33 @@ paths:
       summary: List child categories
       tags:
       - Categories
+  /community:
+    get:
+      description: Returns the hero featured post and a cursor-paginated list of recent
+        published posts for the community screen.
+      parameters:
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      summary: Community feed — featured post + recent posts
+      tags:
+      - Community
   /hashtags/{tag}/products:
     get:
       parameters:

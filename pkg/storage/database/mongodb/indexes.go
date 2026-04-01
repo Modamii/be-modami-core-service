@@ -93,6 +93,15 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 		{Keys: bson.D{{"usage_count", -1}}},
 	})
 
+	// blog_posts
+	createIndexes(ctx, db.Collection("blog_posts"), []mongo.IndexModel{
+		{Keys: bson.D{{Key: "slug", Value: 1}}, Options: options.Index().SetUnique(true)},
+		{Keys: bson.D{{Key: "status", Value: 1}, {Key: "published_at", Value: -1}}},
+		{Keys: bson.D{{Key: "status", Value: 1}, {Key: "is_featured", Value: 1}}},
+		{Keys: bson.D{{Key: "status", Value: 1}, {Key: "post_type", Value: 1}, {Key: "published_at", Value: -1}}},
+		{Keys: bson.D{{Key: "hashtags", Value: 1}, {Key: "status", Value: 1}}},
+	})
+
 	logger.Info(ctx, "all indexes ensured")
 }
 

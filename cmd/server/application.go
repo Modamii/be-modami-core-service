@@ -40,15 +40,18 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	savedCollectionRepo := repository.NewSavedCollectionRepository(db)
 	followRepo := repository.NewFollowRepository(db)
 	reviewRepo := repository.NewReviewRepository(db)
+	blogRepo := repository.NewBlogRepository(db)
 
 	productSvc := service.NewProductService(productRepo, categoryRepo)
 	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
+	blogSvc := service.NewBlogService(blogRepo)
 
 	productH := handler.NewProductHandler(productSvc)
 	masterdataH := handler.NewMasterdataHandler(masterdataSvc)
 	sellerH := handler.NewSellerHandler(sellerSvc)
 	searchH := handler.NewSearchHandler(productH, masterdataH)
+	blogH := handler.NewBlogHandler(blogSvc)
 
 	_ = favoriteRepo
 	_ = savedProductRepo
@@ -109,6 +112,13 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	v1.GET("/sellers/:id/reviews", sellerH.GetReviews)
 	v1.GET("/sellers/:id/stats", sellerH.GetStats)
 
+	// Community & Blog — public routes
+	v1.GET("/community", blogH.CommunityFeed)
+	v1.GET("/blog/posts", blogH.ListPosts)
+	v1.GET("/blog/posts/:slug", blogH.GetPost)
+	v1.GET("/blog/reports", blogH.ListTrendReports)
+	v1.GET("/blog/hashtags/:tag", blogH.HashtagPosts)
+
 	protected := v1.Group("")
 	protected.Use(auth.Required())
 	{
@@ -129,6 +139,12 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		admin.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.AdminToggleCategory)
 		admin.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.AdminDeleteCategory)
 		admin.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.AdminReorderCategories)
+
+		// Community & Blog — admin routes
+		admin.POST("/blog/posts", hmw.RequirePermission("blog.create"), blogH.AdminCreatePost)
+		admin.PUT("/blog/posts/:id", hmw.RequirePermission("blog.update"), blogH.AdminUpdatePost)
+		admin.DELETE("/blog/posts/:id", hmw.RequirePermission("blog.delete"), blogH.AdminDeletePost)
+		admin.POST("/blog/posts/:id/publish", hmw.RequirePermission("blog.publish"), blogH.AdminPublishPost)
 	}
 
 	serviceName := strings.TrimSpace(cfg.Observability.ServiceName)
