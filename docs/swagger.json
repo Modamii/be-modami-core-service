@@ -37,7 +37,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.CreateCategoryRequest"
+                            "$ref": "#/definitions/handler.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -45,31 +45,31 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -98,7 +98,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_modami_core-service_internal_domain.CategoryOrder"
+                                "$ref": "#/definitions/domain.CategoryOrder"
                             }
                         }
                     }
@@ -110,25 +110,25 @@
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -165,7 +165,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.UpdateCategoryRequest"
+                            "$ref": "#/definitions/handler.UpdateCategoryRequest"
                         }
                     }
                 ],
@@ -173,37 +173,37 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -234,19 +234,19 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -276,25 +276,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -313,13 +313,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -347,19 +347,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -387,19 +387,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -427,19 +427,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -466,13 +466,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -512,13 +512,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -571,7 +571,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_modami_core-service_internal_dto.CreateProductRequest"
+                            "$ref": "#/definitions/dto.CreateProductRequest"
                         }
                     }
                 ],
@@ -579,25 +579,25 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -630,13 +630,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -669,13 +669,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -719,19 +719,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -800,13 +800,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -839,13 +839,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -873,19 +873,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -913,19 +913,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -960,7 +960,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_modami_core-service_internal_dto.UpdateProductRequest"
+                            "$ref": "#/definitions/dto.UpdateProductRequest"
                         }
                     }
                 ],
@@ -968,37 +968,37 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1029,25 +1029,25 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1077,25 +1077,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1123,19 +1123,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1172,7 +1172,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_modami_core-service_internal_dto.ResubmitRequest"
+                            "$ref": "#/definitions/dto.ResubmitRequest"
                         }
                     }
                 ],
@@ -1180,31 +1180,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1238,19 +1238,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1280,31 +1280,31 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1334,25 +1334,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1380,13 +1380,13 @@
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1455,13 +1455,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1489,19 +1489,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1528,13 +1528,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1562,19 +1562,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1614,13 +1614,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1660,13 +1660,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1694,19 +1694,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1746,13 +1746,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardSuccessEnvelope"
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_adapter_handler.StandardErrorEnvelope"
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
                         }
                     }
                 }
@@ -1760,7 +1760,7 @@
         }
     },
     "definitions": {
-        "github_com_modami_core-service_internal_domain.CategoryOrder": {
+        "domain.CategoryOrder": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1771,7 +1771,7 @@
                 }
             }
         },
-        "github_com_modami_core-service_internal_dto.CreateProductRequest": {
+        "dto.CreateProductRequest": {
             "type": "object",
             "required": [
                 "category_id",
@@ -1821,7 +1821,7 @@
                     "maxItems": 6,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/github_com_modami_core-service_internal_dto.ImageInput"
+                        "$ref": "#/definitions/dto.ImageInput"
                     }
                 },
                 "material": {
@@ -1841,7 +1841,7 @@
                 }
             }
         },
-        "github_com_modami_core-service_internal_dto.ImageInput": {
+        "dto.ImageInput": {
             "type": "object",
             "required": [
                 "url"
@@ -1861,7 +1861,7 @@
                 }
             }
         },
-        "github_com_modami_core-service_internal_dto.ResubmitRequest": {
+        "dto.ResubmitRequest": {
             "type": "object",
             "properties": {
                 "brand": {
@@ -1899,7 +1899,7 @@
                     "maxItems": 6,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/github_com_modami_core-service_internal_dto.ImageInput"
+                        "$ref": "#/definitions/dto.ImageInput"
                     }
                 },
                 "material": {
@@ -1922,7 +1922,7 @@
                 }
             }
         },
-        "github_com_modami_core-service_internal_dto.UpdateProductRequest": {
+        "dto.UpdateProductRequest": {
             "type": "object",
             "properties": {
                 "brand": {
@@ -1963,7 +1963,7 @@
                     "maxItems": 6,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/github_com_modami_core-service_internal_dto.ImageInput"
+                        "$ref": "#/definitions/dto.ImageInput"
                     }
                 },
                 "material": {
@@ -1983,7 +1983,7 @@
                 }
             }
         },
-        "internal_adapter_handler.CreateCategoryRequest": {
+        "handler.CreateCategoryRequest": {
             "type": "object",
             "required": [
                 "name",
@@ -2011,7 +2011,7 @@
                 }
             }
         },
-        "internal_adapter_handler.StandardErrorEnvelope": {
+        "handler.StandardErrorEnvelope": {
             "type": "object",
             "properties": {
                 "error": {},
@@ -2021,7 +2021,7 @@
                 }
             }
         },
-        "internal_adapter_handler.StandardSuccessEnvelope": {
+        "handler.StandardSuccessEnvelope": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2031,7 +2031,7 @@
                 }
             }
         },
-        "internal_adapter_handler.UpdateCategoryRequest": {
+        "handler.UpdateCategoryRequest": {
             "type": "object",
             "properties": {
                 "icon": {

@@ -1,13 +1,13 @@
 basePath: /v1/core-services
 definitions:
-  github_com_modami_core-service_internal_domain.CategoryOrder:
+  domain.CategoryOrder:
     properties:
       id:
         type: string
       sort_order:
         type: integer
     type: object
-  github_com_modami_core-service_internal_dto.CreateProductRequest:
+  dto.CreateProductRequest:
     properties:
       brand:
         type: string
@@ -35,7 +35,7 @@ definitions:
         type: array
       images:
         items:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+          $ref: '#/definitions/dto.ImageInput'
         maxItems: 6
         minItems: 1
         type: array
@@ -59,7 +59,7 @@ definitions:
     - size
     - title
     type: object
-  github_com_modami_core-service_internal_dto.ImageInput:
+  dto.ImageInput:
     properties:
       height:
         type: integer
@@ -72,7 +72,7 @@ definitions:
     required:
     - url
     type: object
-  github_com_modami_core-service_internal_dto.ResubmitRequest:
+  dto.ResubmitRequest:
     properties:
       brand:
         type: string
@@ -98,7 +98,7 @@ definitions:
         type: array
       images:
         items:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+          $ref: '#/definitions/dto.ImageInput'
         maxItems: 6
         minItems: 1
         type: array
@@ -116,7 +116,7 @@ definitions:
         minLength: 5
         type: string
     type: object
-  github_com_modami_core-service_internal_dto.UpdateProductRequest:
+  dto.UpdateProductRequest:
     properties:
       brand:
         type: string
@@ -144,7 +144,7 @@ definitions:
         type: array
       images:
         items:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ImageInput'
+          $ref: '#/definitions/dto.ImageInput'
         maxItems: 6
         minItems: 1
         type: array
@@ -160,7 +160,7 @@ definitions:
         minLength: 5
         type: string
     type: object
-  internal_adapter_handler.CreateCategoryRequest:
+  handler.CreateCategoryRequest:
     properties:
       icon:
         type: string
@@ -179,21 +179,21 @@ definitions:
     - name_vi
     - slug
     type: object
-  internal_adapter_handler.StandardErrorEnvelope:
+  handler.StandardErrorEnvelope:
     properties:
       error: {}
       meta: {}
       success:
         type: boolean
     type: object
-  internal_adapter_handler.StandardSuccessEnvelope:
+  handler.StandardSuccessEnvelope:
     properties:
       data: {}
       meta: {}
       success:
         type: boolean
     type: object
-  internal_adapter_handler.UpdateCategoryRequest:
+  handler.UpdateCategoryRequest:
     properties:
       icon:
         type: string
@@ -224,30 +224,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/internal_adapter_handler.CreateCategoryRequest'
+          $ref: '#/definitions/handler.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: 'Admin: create category'
@@ -267,15 +267,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: 'Admin: delete category'
@@ -295,34 +295,34 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/internal_adapter_handler.UpdateCategoryRequest'
+          $ref: '#/definitions/handler.UpdateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: 'Admin: update category'
@@ -340,19 +340,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: 'Admin: toggle category active'
@@ -369,7 +369,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/github_com_modami_core-service_internal_domain.CategoryOrder'
+            $ref: '#/definitions/domain.CategoryOrder'
           type: array
       responses:
         "204":
@@ -377,19 +377,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: 'Admin: reorder categories'
@@ -403,11 +403,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: List categories
       tags:
       - Categories
@@ -425,15 +425,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Get category by slug
       tags:
       - Categories
@@ -451,15 +451,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: List child categories
       tags:
       - Categories
@@ -485,11 +485,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Products by hashtag
       tags:
       - Products
@@ -507,15 +507,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Suggest hashtags (autocomplete)
       tags:
       - Hashtags
@@ -532,11 +532,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Trending hashtags
       tags:
       - Hashtags
@@ -565,26 +565,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.CreateProductRequest'
+          $ref: '#/definitions/dto.CreateProductRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Create product
@@ -604,19 +604,19 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Delete product
@@ -635,15 +635,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Get product by ID
       tags:
       - Products
@@ -661,34 +661,34 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.UpdateProductRequest'
+          $ref: '#/definitions/dto.UpdateProductRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Update product
@@ -706,19 +706,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Archive product
@@ -738,15 +738,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: List moderation history for product
       tags:
       - Products
@@ -765,30 +765,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_modami_core-service_internal_dto.ResubmitRequest'
+          $ref: '#/definitions/dto.ResubmitRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Resubmit rejected product
@@ -812,15 +812,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Similar products
       tags:
       - Products
@@ -836,23 +836,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Submit product for review
@@ -870,19 +870,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: Unarchive product
@@ -902,11 +902,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Track product view
       tags:
       - Products
@@ -927,11 +927,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Featured products
       tags:
       - Products
@@ -952,11 +952,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Product feed (cursor)
       tags:
       - Products
@@ -981,15 +981,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       security:
       - BearerAuth: []
       summary: List my products (seller)
@@ -1036,11 +1036,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Search products (catalog)
       tags:
       - Search
@@ -1061,11 +1061,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Curated select products
       tags:
       - Products
@@ -1083,15 +1083,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Get product by slug
       tags:
       - Products
@@ -1136,11 +1136,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Search products (alias of GET /products/search)
       tags:
       - Search
@@ -1158,15 +1158,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Hashtag suggestions (alias of GET /hashtags/suggest)
       tags:
       - Search
@@ -1183,11 +1183,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Trending hashtags (alias of GET /hashtags/trending)
       tags:
       - Search
@@ -1205,15 +1205,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Public seller profile
       tags:
       - Sellers
@@ -1239,11 +1239,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Seller's listed products
       tags:
       - Sellers
@@ -1269,11 +1269,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Seller reviews
       tags:
       - Sellers
@@ -1291,15 +1291,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Seller public stats
       tags:
       - Sellers
@@ -1325,11 +1325,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardSuccessEnvelope'
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_adapter_handler.StandardErrorEnvelope'
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: List products by seller
       tags:
       - Products
