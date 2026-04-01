@@ -18,7 +18,7 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) {
 	// products
 	createIndexes(ctx, db.Collection("products"), []mongo.IndexModel{
 		{Keys: bson.D{{"seller_id", 1}, {"status", 1}, {"created_at", -1}}},
-		{Keys: bson.D{{"status", 1}, {"category_id", 1}, {"published_at", -1}}},
+		{Keys: bson.D{{"status", 1}, {"category._id", 1}, {"published_at", -1}}},
 		{Keys: bson.D{{"status", 1}, {"is_featured", 1}, {"published_at", -1}}},
 		{Keys: bson.D{{"status", 1}, {"is_select", 1}, {"published_at", -1}}},
 		{Keys: bson.D{{"status", 1}, {"is_verified", 1}, {"published_at", -1}}},

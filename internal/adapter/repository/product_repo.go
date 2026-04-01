@@ -119,11 +119,15 @@ func (r *productMongoRepository) ListSimilar(ctx context.Context, productID bson
 		return nil, err
 	}
 
+	catFilter := bson.M{"$exists": false}
+	if p.Category != nil {
+		catFilter = bson.M{"$eq": p.Category.ID}
+	}
 	filter := bson.M{
-		"status":      domain.StatusActive,
-		"category_id": p.CategoryID,
-		"_id":         bson.M{"$ne": productID},
-		"deleted_at":  nil,
+		"status":       domain.StatusActive,
+		"category._id": catFilter,
+		"_id":          bson.M{"$ne": productID},
+		"deleted_at":   nil,
 	}
 
 	opts := options.Find().SetLimit(int64(limit)).SetSort(bson.D{{Key: "published_at", Value: -1}})
@@ -257,7 +261,7 @@ func (r *productMongoRepository) Search(ctx context.Context, query string, param
 
 	if params.CategoryID != "" {
 		if oid, err := bson.ObjectIDFromHex(params.CategoryID); err == nil {
-			filter["category_id"] = oid
+			filter["category._id"] = oid
 		}
 	}
 	if params.Condition != "" {

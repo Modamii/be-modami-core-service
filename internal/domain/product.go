@@ -27,7 +27,7 @@ type Product struct {
 	Description string `bson:"description" json:"description"`
 	Price       int64  `bson:"price" json:"price"`
 
-	CategoryID bson.ObjectID `bson:"category_id" json:"category_id"`
+	Category *Category `bson:"category" json:"category"`
 	Condition  string        `bson:"condition" json:"condition"`
 	Size       string        `bson:"size" json:"size"`
 	Brand      string        `bson:"brand,omitempty" json:"brand,omitempty"`

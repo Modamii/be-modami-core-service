@@ -17,7 +17,7 @@ func handleError(c *gin.Context, err error) {
 		response.Err(c.Writer, ae)
 		return
 	}
-	response.InternalError(c.Writer, "internal server error")
+	response.InternalError(c.Writer, "lỗi hệ thống nội bộ")
 }
 
 func validationResponse(c *gin.Context, errs []validator.FieldError) {

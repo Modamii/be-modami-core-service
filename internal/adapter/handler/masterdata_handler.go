@@ -107,7 +107,7 @@ func (h *MasterdataHandler) TrendingHashtags(c *gin.Context) {
 func (h *MasterdataHandler) SuggestHashtags(c *gin.Context) {
 	q := c.Query("q")
 	if q == "" {
-		response.BadRequest(c.Writer, "query parameter 'q' is required")
+		response.BadRequest(c.Writer, "tham số 'q' là bắt buộc")
 		return
 	}
 	tags, err := h.svc.SuggestHashtags(c.Request.Context(), q, 10)
@@ -165,7 +165,7 @@ func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
 	if req.ParentID != nil {
 		oid, err := bson.ObjectIDFromHex(*req.ParentID)
 		if err != nil {
-			response.BadRequest(c.Writer, "invalid parent_id")
+			response.BadRequest(c.Writer, "parent_id không hợp lệ")
 			return
 		}
 		cat.ParentID = &oid

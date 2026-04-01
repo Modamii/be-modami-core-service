@@ -41,7 +41,7 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	followRepo := repository.NewFollowRepository(db)
 	reviewRepo := repository.NewReviewRepository(db)
 
-	productSvc := service.NewProductService(productRepo)
+	productSvc := service.NewProductService(productRepo, categoryRepo)
 	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
 
@@ -119,17 +119,16 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		protected.POST("/products/:id/resubmit", productH.Resubmit)
 		protected.POST("/products/:id/archive", productH.Archive)
 		protected.POST("/products/:id/unarchive", productH.Unarchive)
-
 	}
 
 	admin := v1.Group("/admin")
-	admin.Use(auth.Required(), hmw.AdminOnly)
+	admin.Use(auth.Required())
 	{
-		admin.POST("/categories", masterdataH.AdminCreateCategory)
-		admin.PUT("/categories/:id", masterdataH.AdminUpdateCategory)
-		admin.PUT("/categories/:id/toggle", masterdataH.AdminToggleCategory)
-		admin.DELETE("/categories/:id", masterdataH.AdminDeleteCategory)
-		admin.PUT("/categories/reorder", masterdataH.AdminReorderCategories)
+		admin.POST("/categories", hmw.RequirePermission("category.create"), masterdataH.AdminCreateCategory)
+		admin.PUT("/categories/:id", hmw.RequirePermission("category.update"), masterdataH.AdminUpdateCategory)
+		admin.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.AdminToggleCategory)
+		admin.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.AdminDeleteCategory)
+		admin.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.AdminReorderCategories)
 	}
 
 	serviceName := strings.TrimSpace(cfg.Observability.ServiceName)

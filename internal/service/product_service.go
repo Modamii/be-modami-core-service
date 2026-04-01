@@ -16,22 +16,27 @@ import (
 )
 
 type ProductService struct {
-	repo port.ProductRepository
+	repo     port.ProductRepository
+	catRepo  port.CategoryRepository
 }
 
-func NewProductService(repo port.ProductRepository) *ProductService {
-	return &ProductService{repo: repo}
+func NewProductService(repo port.ProductRepository, catRepo port.CategoryRepository) *ProductService {
+	return &ProductService{repo: repo, catRepo: catRepo}
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.CreateProductRequest) (*domain.Product, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid seller_id")
+		return nil, apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
 	}
 
 	catID, err := bson.ObjectIDFromHex(req.CategoryID)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid category_id")
+		return nil, apperror.New(apperror.CodeBadRequest, "category_id không hợp lệ")
+	}
+	cat, err := s.catRepo.GetByID(ctx, catID)
+	if err != nil || cat == nil {
+		return nil, apperror.New(apperror.CodeBadRequest, "không tìm thấy danh mục")
 	}
 
 	images := make([]domain.ProductImage, len(req.Images))
@@ -51,7 +56,7 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 		Slug:        generateSlug(req.Title),
 		Description: req.Description,
 		Price:       req.Price,
-		CategoryID:  catID,
+		Category:    cat,
 		Condition:   req.Condition,
 		Size:        req.Size,
 		Brand:       req.Brand,
@@ -63,7 +68,7 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to create product")
+		return nil, apperror.New(apperror.CodeInternal,"tạo sản phẩm thất bại")
 	}
 
 	_ = s.repo.InitStats(ctx, p.ID)
@@ -73,14 +78,14 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 func (s *ProductService) GetByID(ctx context.Context, id string) (*domain.Product, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	p, err := s.repo.GetByID(ctx, oid)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to get product")
+		return nil, apperror.New(apperror.CodeInternal,"lấy sản phẩm thất bại")
 	}
 	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"product not found")
+		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy sản phẩm")
 	}
 	return p, nil
 }
@@ -88,10 +93,10 @@ func (s *ProductService) GetByID(ctx context.Context, id string) (*domain.Produc
 func (s *ProductService) GetBySlug(ctx context.Context, slug string) (*domain.Product, error) {
 	p, err := s.repo.GetBySlug(ctx, slug)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to get product")
+		return nil, apperror.New(apperror.CodeInternal,"lấy sản phẩm thất bại")
 	}
 	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"product not found")
+		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy sản phẩm")
 	}
 	return p, nil
 }
@@ -102,10 +107,10 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"you can only update your own products")
+		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể cập nhật sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft && p.Status != domain.StatusArchived {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only update products in draft or archived status")
+		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể cập nhật sản phẩm ở trạng thái nháp hoặc đã lưu trữ")
 	}
 
 	if req.Title != nil {
@@ -121,9 +126,13 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 	if req.CategoryID != nil {
 		catID, err := bson.ObjectIDFromHex(*req.CategoryID)
 		if err != nil {
-			return nil, apperror.New(apperror.CodeBadRequest,"invalid category_id")
+			return nil, apperror.New(apperror.CodeBadRequest, "category_id không hợp lệ")
 		}
-		p.CategoryID = catID
+		cat, err := s.catRepo.GetByID(ctx, catID)
+		if err != nil || cat == nil {
+			return nil, apperror.New(apperror.CodeBadRequest, "không tìm thấy danh mục")
+		}
+		p.Category = cat
 	}
 	if req.Condition != nil {
 		p.Condition = *req.Condition
@@ -156,9 +165,9 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 
 	if err := s.repo.Update(ctx, p); err != nil {
 		if err == domain.ErrProductVersionConflict {
-			return nil, apperror.New(apperror.CodeConflict,"product was modified by another request, please retry")
+			return nil, apperror.New(apperror.CodeConflict, "sản phẩm đã bị thay đổi bởi yêu cầu khác, vui lòng thử lại")
 		}
-		return nil, apperror.New(apperror.CodeInternal,"failed to update product")
+		return nil, apperror.New(apperror.CodeInternal, "cập nhật sản phẩm thất bại")
 	}
 	return p, nil
 }
@@ -169,10 +178,10 @@ func (s *ProductService) Delete(ctx context.Context, id string, sellerID string)
 		return err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return apperror.New(apperror.CodeForbidden,"you can only delete your own products")
+		return apperror.New(apperror.CodeForbidden,"bạn chỉ có thể xóa sản phẩm của mình")
 	}
 	if err := s.repo.SoftDelete(ctx, p.ID); err != nil {
-		return apperror.New(apperror.CodeInternal,"failed to delete product")
+		return apperror.New(apperror.CodeInternal,"xóa sản phẩm thất bại")
 	}
 	return nil
 }
@@ -183,15 +192,15 @@ func (s *ProductService) Submit(ctx context.Context, id string, sellerID string)
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"you can only submit your own products")
+		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể gửi duyệt sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only submit products in draft status")
+		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể gửi duyệt sản phẩm ở trạng thái nháp")
 	}
 
 	p.Status = domain.StatusPending
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to submit product")
+		return nil, apperror.New(apperror.CodeInternal,"gửi duyệt sản phẩm thất bại")
 	}
 
 	latestMod, _ := s.repo.GetLatestModeration(ctx, p.ID)
@@ -215,10 +224,10 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"you can only resubmit your own products")
+		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể gửi lại sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only resubmit products that were rejected (draft status)")
+		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể gửi lại sản phẩm bị từ chối (trạng thái nháp)")
 	}
 
 	// Apply updates
@@ -235,9 +244,13 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 	if req.CategoryID != nil {
 		catID, err := bson.ObjectIDFromHex(*req.CategoryID)
 		if err != nil {
-			return nil, apperror.New(apperror.CodeBadRequest,"invalid category_id")
+			return nil, apperror.New(apperror.CodeBadRequest, "category_id không hợp lệ")
 		}
-		p.CategoryID = catID
+		cat, err := s.catRepo.GetByID(ctx, catID)
+		if err != nil || cat == nil {
+			return nil, apperror.New(apperror.CodeBadRequest, "không tìm thấy danh mục")
+		}
+		p.Category = cat
 	}
 	if req.Condition != nil {
 		p.Condition = *req.Condition
@@ -267,7 +280,7 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 
 	p.Status = domain.StatusPending
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to resubmit product")
+		return nil, apperror.New(apperror.CodeInternal,"gửi lại sản phẩm thất bại")
 	}
 
 	latestMod, _ := s.repo.GetLatestModeration(ctx, p.ID)
@@ -292,14 +305,14 @@ func (s *ProductService) Archive(ctx context.Context, id string, sellerID string
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"you can only archive your own products")
+		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể lưu trữ sản phẩm của mình")
 	}
 	if p.Status != domain.StatusActive {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only archive active products")
+		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể lưu trữ sản phẩm đang hoạt động")
 	}
 	p.Status = domain.StatusArchived
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to archive product")
+		return nil, apperror.New(apperror.CodeInternal,"lưu trữ sản phẩm thất bại")
 	}
 	return p, nil
 }
@@ -310,16 +323,16 @@ func (s *ProductService) Unarchive(ctx context.Context, id string, sellerID stri
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"you can only unarchive your own products")
+		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể khôi phục sản phẩm của mình")
 	}
 	if p.Status != domain.StatusArchived {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only unarchive archived products")
+		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể khôi phục sản phẩm đã lưu trữ")
 	}
 	p.Status = domain.StatusActive
 	now := time.Now()
 	p.PublishedAt = &now
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to unarchive product")
+		return nil, apperror.New(apperror.CodeInternal,"khôi phục sản phẩm thất bại")
 	}
 	return p, nil
 }
@@ -327,7 +340,7 @@ func (s *ProductService) Unarchive(ctx context.Context, id string, sellerID stri
 func (s *ProductService) GetModeration(ctx context.Context, id string) ([]domain.ProductModeration, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	return s.repo.ListModerations(ctx, oid)
 }
@@ -335,7 +348,7 @@ func (s *ProductService) GetModeration(ctx context.Context, id string) ([]domain
 func (s *ProductService) MyProducts(ctx context.Context, sellerID string, status string, cursor string, limit int) ([]domain.Product, string, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"invalid seller_id")
+		return nil, "", apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
 	}
 	return s.repo.ListBySellerID(ctx, sid, status, cursor, limit)
 }
@@ -343,7 +356,7 @@ func (s *ProductService) MyProducts(ctx context.Context, sellerID string, status
 func (s *ProductService) SellerProducts(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Product, string, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"invalid seller_id")
+		return nil, "", apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
 	}
 	return s.repo.ListBySellerID(ctx, sid, string(domain.StatusActive), cursor, limit)
 }
@@ -363,7 +376,7 @@ func (s *ProductService) Select(ctx context.Context, cursor string, limit int) (
 func (s *ProductService) Similar(ctx context.Context, id string, limit int) ([]domain.Product, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	return s.repo.ListSimilar(ctx, oid, limit)
 }
@@ -371,7 +384,7 @@ func (s *ProductService) Similar(ctx context.Context, id string, limit int) ([]d
 func (s *ProductService) TrackView(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	return s.repo.IncrementStat(ctx, oid, "view_count", 1)
 }
@@ -379,7 +392,7 @@ func (s *ProductService) TrackView(ctx context.Context, id string) error {
 func (s *ProductService) GetStats(ctx context.Context, id string) (*domain.ProductStats, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	return s.repo.GetStats(ctx, oid)
 }
@@ -475,7 +488,7 @@ func (s *ProductService) SetSelect(ctx context.Context, id string, sp *domain.Se
 func (s *ProductService) HardDelete(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return apperror.New(apperror.CodeBadRequest,"invalid product id")
+		return apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
 	}
 	return s.repo.SoftDelete(ctx, oid)
 }

@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/modami/core-service/internal/domain"
 	"github.com/modami/core-service/internal/port"
+	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -26,7 +28,10 @@ func (r *mongoCategoryRepo) Create(ctx context.Context, c *domain.Category) erro
 	c.IsActive = true
 	result, err := r.col.InsertOne(ctx, c)
 	if err != nil {
-		return err
+		if mongo.IsDuplicateKeyError(err) {
+			return apperror.New(apperror.CodeConflict, "slug danh mục đã tồn tại")
+		}
+		return apperror.New(apperror.CodeInternal, fmt.Sprintf("tạo danh mục thất bại: %v", err))
 	}
 	c.ID = result.InsertedID.(bson.ObjectID)
 	return nil

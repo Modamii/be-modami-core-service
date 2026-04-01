@@ -18,11 +18,15 @@ import (
 )
 
 const (
-	ctxKeyUserID = "user_id"
-	ctxKeyRole   = "user_role"
+	ctxKeyUserID      = "user_id"
+	ctxKeyRole        = "user_role"
+	ctxKeyPermissions = "user_permissions"
 )
 
-var errUnauthorized = gokit.New(gokit.CodeUnauthorized, "unauthorized")
+var (
+	errUnauthorized = gokit.New(gokit.CodeUnauthorized, "chưa xác thực")
+	errForbidden    = gokit.New(gokit.CodeForbidden, "không có quyền truy cập")
+)
 
 // Auth validates Keycloak-issued JWTs via JWKS.
 type Auth struct {
@@ -80,8 +84,25 @@ func (a *Auth) Required() gin.HandlerFunc {
 			if rolesRaw, ok := ra["roles"].([]interface{}); ok && len(rolesRaw) > 0 {
 				for _, r := range rolesRaw {
 					if rs, ok := r.(string); ok && rs != "" {
-						c.Set(ctxKeyRole, rs)
+						c.Set(ctxKeyRole, strings.ToLower(rs))
 						break
+					}
+				}
+			}
+		}
+
+		// Extract resource_access permissions for the client (azp claim)
+		if clientID, ok := claims["azp"].(string); ok && clientID != "" {
+			if ra, ok := claims["resource_access"].(map[string]interface{}); ok {
+				if client, ok := ra[clientID].(map[string]interface{}); ok {
+					if rolesRaw, ok := client["roles"].([]interface{}); ok {
+						perms := make([]string, 0, len(rolesRaw))
+						for _, r := range rolesRaw {
+							if rs, ok := r.(string); ok && rs != "" {
+								perms = append(perms, rs)
+							}
+						}
+						c.Set(ctxKeyPermissions, perms)
 					}
 				}
 			}
@@ -98,11 +119,41 @@ func UserID(c *gin.Context) string {
 	return id
 }
 
-// Role returns the first realm role of the authenticated user.
+// Role returns the first realm role of the authenticated user (lowercased).
 func Role(c *gin.Context) string {
 	val, _ := c.Get(ctxKeyRole)
 	role, _ := val.(string)
 	return role
+}
+
+// Permissions returns the resource_access permissions for the authenticated user.
+func Permissions(c *gin.Context) []string {
+	val, _ := c.Get(ctxKeyPermissions)
+	perms, _ := val.([]string)
+	return perms
+}
+
+// HasPermission reports whether the authenticated user holds the given permission.
+func HasPermission(c *gin.Context, permission string) bool {
+	for _, p := range Permissions(c) {
+		if p == permission {
+			return true
+		}
+	}
+	return false
+}
+
+// RequirePermission returns a middleware that allows the request only when
+// the authenticated user holds the specified resource_access permission.
+func RequirePermission(permission string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !HasPermission(c, permission) {
+			response.Err(c.Writer, errForbidden)
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
 }
 
 // parse validates and extracts claims from a JWT token string.
@@ -128,7 +179,7 @@ func (a *Auth) parse(tokenStr string) (jwt.MapClaims, error) {
 		return key, nil
 	})
 	if err != nil || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("token không hợp lệ")
 	}
 	return token.Claims.(jwt.MapClaims), nil
 }
