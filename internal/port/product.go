@@ -3,9 +3,17 @@ package port
 import (
 	"context"
 
-	"github.com/modami/core-service/internal/domain"
+	"be-modami-core-service/internal/domain"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
+
+// ProductProducer publishes product domain events to the message broker.
+type ProductProducer interface {
+	ProductCreatedWithData(ctx context.Context, product *domain.Product) error
+	ProductUpdatedWithData(ctx context.Context, product *domain.Product) error
+	ProductDeleted(ctx context.Context, productID, slug string) error
+}
 
 // ProductRepository persists catalog products and related product_* collections.
 type ProductRepository interface {

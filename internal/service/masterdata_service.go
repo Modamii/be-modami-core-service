@@ -5,8 +5,9 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/port"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/port"
+
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 
@@ -27,10 +28,10 @@ func (s *MasterdataService) ListCategories(ctx context.Context) ([]domain.Catego
 func (s *MasterdataService) GetCategoryBySlug(ctx context.Context, slug string) (*domain.Category, error) {
 	c, err := s.categories.GetBySlug(ctx, slug)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lấy danh mục thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lấy danh mục thất bại")
 	}
 	if c == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy danh mục")
+		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy danh mục")
 	}
 	return c, nil
 }
@@ -38,10 +39,10 @@ func (s *MasterdataService) GetCategoryBySlug(ctx context.Context, slug string) 
 func (s *MasterdataService) GetCategoryChildren(ctx context.Context, slug string) ([]domain.Category, error) {
 	parent, err := s.categories.GetBySlug(ctx, slug)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lấy danh mục thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lấy danh mục thất bại")
 	}
 	if parent == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy danh mục")
+		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy danh mục")
 	}
 	return s.categories.ListChildren(ctx, parent.ID)
 }
@@ -57,14 +58,14 @@ func (s *MasterdataService) UpdateCategory(ctx context.Context, c *domain.Catego
 func (s *MasterdataService) GetCategoryByID(ctx context.Context, id string) (*domain.Category, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"ID danh mục không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "ID danh mục không hợp lệ")
 	}
 	c, err := s.categories.GetByID(ctx, oid)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lấy danh mục thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lấy danh mục thất bại")
 	}
 	if c == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy danh mục")
+		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy danh mục")
 	}
 	return c, nil
 }
@@ -76,7 +77,7 @@ func (s *MasterdataService) ToggleCategory(ctx context.Context, id string) (*dom
 	}
 	c.IsActive = !c.IsActive
 	if err := s.categories.Update(ctx, c); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"cập nhật trạng thái danh mục thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "cập nhật trạng thái danh mục thất bại")
 	}
 	return c, nil
 }
@@ -84,7 +85,7 @@ func (s *MasterdataService) ToggleCategory(ctx context.Context, id string) (*dom
 func (s *MasterdataService) DeleteCategory(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return apperror.New(apperror.CodeBadRequest,"ID danh mục không hợp lệ")
+		return apperror.New(apperror.CodeBadRequest, "ID danh mục không hợp lệ")
 	}
 	return s.categories.Delete(ctx, oid)
 }

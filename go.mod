@@ -1,4 +1,4 @@
-module github.com/modami/core-service
+module be-modami-core-service
 
 go 1.25.0
 

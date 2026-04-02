@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/modami/core-service/config"
-	"github.com/modami/core-service/pkg/elasticsearch"
-	"github.com/modami/core-service/pkg/storage/database/mongodb"
-	redisstorage "github.com/modami/core-service/pkg/storage/redis"
+	"be-modami-core-service/config"
+	"be-modami-core-service/pkg/elasticsearch"
+	"be-modami-core-service/pkg/storage/database/mongodb"
+	redisstorage "be-modami-core-service/pkg/storage/redis"
+
 	"github.com/redis/go-redis/v9"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.mongodb.org/mongo-driver/v2/mongo"

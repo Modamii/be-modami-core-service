@@ -10,11 +10,11 @@ import (
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/events"
-	"github.com/modami/core-service/internal/port"
-	"github.com/modami/core-service/pkg/elasticsearch"
-	"github.com/modami/core-service/pkg/kafka"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/events"
+	"be-modami-core-service/internal/port"
+	"be-modami-core-service/pkg/elasticsearch"
+	"be-modami-core-service/pkg/kafka"
 )
 
 type SyncProductConsumer struct {
@@ -27,23 +27,41 @@ func NewSyncProductConsumer(esClient *elasticsearch.Client, productRepo port.Pro
 }
 
 func (c *SyncProductConsumer) GetTopics() []string {
-	return []string{kafka.TopicProductCreated}
+	return []string{
+		kafka.TopicProductCreated,
+		kafka.TopicProductUpdated,
+		kafka.TopicProductDeleted,
+	}
 }
 
 func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Record) error {
-	var payload events.ProductCreatedPayload
-	if err := json.Unmarshal(record.Value, &payload); err != nil {
+	switch record.Topic {
+	case kafka.TopicProductCreated, kafka.TopicProductUpdated:
+		return c.handleUpsert(ctx, record)
+	case kafka.TopicProductDeleted:
+		return c.handleDelete(ctx, record)
+	default:
+		return nil
+	}
+}
+
+func (c *SyncProductConsumer) handleUpsert(ctx context.Context, record *kgo.Record) error {
+	// Both created and updated events share the productId field at top level
+	var base struct {
+		ProductID string `json:"productId"`
+	}
+	if err := json.Unmarshal(record.Value, &base); err != nil {
 		return fmt.Errorf("unmarshal product event: %w", err)
 	}
 
-	oid, err := bson.ObjectIDFromHex(payload.ProductID)
+	oid, err := bson.ObjectIDFromHex(base.ProductID)
 	if err != nil {
 		return fmt.Errorf("invalid product id: %w", err)
 	}
 
 	product, err := c.productRepo.GetByID(ctx, oid)
 	if err != nil || product == nil {
-		logger.Warn(ctx, "sync: product not found", logging.String("id", payload.ProductID))
+		logger.Warn(ctx, "sync: product not found", logging.String("id", base.ProductID))
 		return nil
 	}
 
@@ -52,6 +70,31 @@ func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Rec
 		return nil
 	}
 
+	if err := c.esClient.IndexProduct(ctx, buildProductDocument(product)); err != nil {
+		logger.Error(ctx, "sync: es index failed", err, logging.String("id", product.ID.Hex()))
+		return err
+	}
+
+	logger.Info(ctx, "sync: product indexed", logging.String("id", product.ID.Hex()))
+	return nil
+}
+
+func (c *SyncProductConsumer) handleDelete(ctx context.Context, record *kgo.Record) error {
+	var payload events.ProductDeletedPayload
+	if err := json.Unmarshal(record.Value, &payload); err != nil {
+		return fmt.Errorf("unmarshal product deleted event: %w", err)
+	}
+
+	if err := c.esClient.DeleteProduct(ctx, payload.ProductID); err != nil {
+		logger.Error(ctx, "sync: es delete failed", err, logging.String("id", payload.ProductID))
+		return err
+	}
+
+	logger.Info(ctx, "sync: product deleted from index", logging.String("id", payload.ProductID))
+	return nil
+}
+
+func buildProductDocument(product *domain.Product) *elasticsearch.ProductDocument {
 	images := make([]string, 0, len(product.Images))
 	for _, img := range product.Images {
 		images = append(images, img.URL)
@@ -63,7 +106,7 @@ func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Rec
 		catName = product.Category.Name
 	}
 
-	doc := &elasticsearch.ProductDocument{
+	return &elasticsearch.ProductDocument{
 		ID:           product.ID.Hex(),
 		Slug:         product.Slug,
 		Title:        product.Title,
@@ -83,12 +126,4 @@ func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Rec
 		PublishedAt:  product.PublishedAt,
 		CreatedAt:    product.CreatedAt,
 	}
-
-	if err := c.esClient.IndexProduct(ctx, doc); err != nil {
-		logger.Error(ctx, "sync: es index failed", err, logging.String("id", product.ID.Hex()))
-		return err
-	}
-
-	logger.Info(ctx, "sync: product indexed", logging.String("id", product.ID.Hex()))
-	return nil
 }

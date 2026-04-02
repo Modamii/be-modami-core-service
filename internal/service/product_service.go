@@ -3,19 +3,19 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
-	"unicode"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/modami/core-service/internal/domain"
-	internalevents "github.com/modami/core-service/internal/events"
-	"github.com/modami/core-service/internal/dto"
-	"github.com/modami/core-service/internal/port"
-	"github.com/modami/core-service/pkg/kafka"
-	kafkaevents "github.com/modami/core-service/pkg/kafka/events"
-	redisstorage "github.com/modami/core-service/pkg/storage/redis"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/dto"
+	"be-modami-core-service/internal/port"
+	redisstorage "be-modami-core-service/pkg/storage/redis"
+	"be-modami-core-service/pkg/utils"
+
+	logging "gitlab.com/lifegoeson-libs/pkg-logging"
+	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
+
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 
@@ -26,30 +26,30 @@ const (
 )
 
 type ProductService struct {
-	repo          port.ProductRepository
-	catRepo       port.CategoryRepository
-	redisCache    redisstorage.RedisCacheService
-	kafkaProducer kafka.Producer
+	repo            port.ProductRepository
+	catRepo         port.CategoryRepository
+	redisCache      redisstorage.RedisCacheService
+	productProducer port.ProductProducer
 }
 
 func NewProductService(
 	repo port.ProductRepository,
 	catRepo port.CategoryRepository,
 	redisCache redisstorage.RedisCacheService,
-	kafkaProducer kafka.Producer,
+	productProducer port.ProductProducer,
 ) *ProductService {
 	return &ProductService{
-		repo:          repo,
-		catRepo:       catRepo,
-		redisCache:    redisCache,
-		kafkaProducer: kafkaProducer,
+		repo:            repo,
+		catRepo:         catRepo,
+		redisCache:      redisCache,
+		productProducer: productProducer,
 	}
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.CreateProductRequest) (*domain.Product, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
 	}
 
 	catID, err := bson.ObjectIDFromHex(req.CategoryID)
@@ -75,7 +75,7 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 		SellerID:    sid,
 		Status:      domain.StatusDraft,
 		Title:       req.Title,
-		Slug:        generateSlug(req.Title),
+		Slug:        utils.GenerateSlug(req.Title),
 		Description: req.Description,
 		Price:       req.Price,
 		Category:    cat,
@@ -95,39 +95,12 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 
 	_ = s.repo.InitStats(ctx, p.ID)
 
-	if s.kafkaProducer != nil {
-		images := make([]string, 0, len(p.Images))
-		for _, img := range p.Images {
-			images = append(images, img.URL)
+	if s.productProducer != nil {
+		if err := s.productProducer.ProductCreatedWithData(ctx, p); err != nil {
+			logger.FromContext(ctx).Error("failed to publish product created event with data", err,
+				logging.String("productId", p.ID.Hex()),
+			)
 		}
-		var catID, catName string
-		if p.Category != nil {
-			catID = p.Category.ID.Hex()
-			catName = p.Category.Name
-		}
-		payload := &internalevents.ProductCreatedPayload{
-			BaseEventPayload: kafkaevents.BaseEventPayload{
-				Type:      internalevents.EventTypeProductCreated,
-				Timestamp: time.Now(),
-			},
-			ProductID:    p.ID.Hex(),
-			Slug:         p.Slug,
-			Title:        p.Title,
-			SellerID:     p.SellerID.Hex(),
-			CategoryID:   catID,
-			CategoryName: catName,
-			Status:       string(p.Status),
-			Price:        p.Price,
-			Brand:        p.Brand,
-			Condition:    p.Condition,
-			Hashtags:     p.Hashtags,
-			Images:       images,
-			CreatedAt:    p.CreatedAt,
-		}
-		s.kafkaProducer.EmitAsync(ctx, kafka.TopicProductCreated, &kafka.ProducerMessage{
-			Key:   p.ID.Hex(),
-			Value: payload,
-		})
 	}
 
 	return p, nil
@@ -136,14 +109,14 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 func (s *ProductService) GetByID(ctx context.Context, id string) (*domain.Product, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	p, err := s.repo.GetByID(ctx, oid)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lấy sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lấy sản phẩm thất bại")
 	}
 	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy sản phẩm")
+		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy sản phẩm")
 	}
 	return p, nil
 }
@@ -151,10 +124,10 @@ func (s *ProductService) GetByID(ctx context.Context, id string) (*domain.Produc
 func (s *ProductService) GetBySlug(ctx context.Context, slug string) (*domain.Product, error) {
 	p, err := s.repo.GetBySlug(ctx, slug)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lấy sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lấy sản phẩm thất bại")
 	}
 	if p == nil {
-		return nil, apperror.New(apperror.CodeNotFound,"không tìm thấy sản phẩm")
+		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy sản phẩm")
 	}
 	return p, nil
 }
@@ -165,15 +138,15 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể cập nhật sản phẩm của mình")
+		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể cập nhật sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft && p.Status != domain.StatusArchived {
-		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể cập nhật sản phẩm ở trạng thái nháp hoặc đã lưu trữ")
+		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể cập nhật sản phẩm ở trạng thái nháp hoặc đã lưu trữ")
 	}
 
 	if req.Title != nil {
 		p.Title = *req.Title
-		p.Slug = generateSlug(*req.Title)
+		p.Slug = utils.GenerateSlug(*req.Title)
 	}
 	if req.Description != nil {
 		p.Description = *req.Description
@@ -228,6 +201,13 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		return nil, apperror.New(apperror.CodeInternal, "cập nhật sản phẩm thất bại")
 	}
 	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
+	if s.productProducer != nil {
+		if err := s.productProducer.ProductUpdatedWithData(ctx, p); err != nil {
+			logger.FromContext(ctx).Error("failed to publish product updated event with data", err,
+				logging.String("productId", p.ID.Hex()),
+			)
+		}
+	}
 	return p, nil
 }
 
@@ -243,6 +223,13 @@ func (s *ProductService) Delete(ctx context.Context, id string, sellerID string)
 		return apperror.New(apperror.CodeInternal, "xóa sản phẩm thất bại")
 	}
 	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
+	if s.productProducer != nil {
+		if err := s.productProducer.ProductDeleted(ctx, p.ID.Hex(), p.Slug); err != nil {
+			logger.FromContext(ctx).Error("failed to publish product deleted event", err,
+				logging.String("productId", p.ID.Hex()),
+			)
+		}
+	}
 	return nil
 }
 
@@ -252,15 +239,15 @@ func (s *ProductService) Submit(ctx context.Context, id string, sellerID string)
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể gửi duyệt sản phẩm của mình")
+		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể gửi duyệt sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
-		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể gửi duyệt sản phẩm ở trạng thái nháp")
+		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể gửi duyệt sản phẩm ở trạng thái nháp")
 	}
 
 	p.Status = domain.StatusPending
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"gửi duyệt sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "gửi duyệt sản phẩm thất bại")
 	}
 
 	latestMod, _ := s.repo.GetLatestModeration(ctx, p.ID)
@@ -284,16 +271,16 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể gửi lại sản phẩm của mình")
+		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể gửi lại sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
-		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể gửi lại sản phẩm bị từ chối (trạng thái nháp)")
+		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể gửi lại sản phẩm bị từ chối (trạng thái nháp)")
 	}
 
 	// Apply updates
 	if req.Title != nil {
 		p.Title = *req.Title
-		p.Slug = generateSlug(*req.Title)
+		p.Slug = utils.GenerateSlug(*req.Title)
 	}
 	if req.Description != nil {
 		p.Description = *req.Description
@@ -340,7 +327,7 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 
 	p.Status = domain.StatusPending
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"gửi lại sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "gửi lại sản phẩm thất bại")
 	}
 
 	latestMod, _ := s.repo.GetLatestModeration(ctx, p.ID)
@@ -365,14 +352,14 @@ func (s *ProductService) Archive(ctx context.Context, id string, sellerID string
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể lưu trữ sản phẩm của mình")
+		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể lưu trữ sản phẩm của mình")
 	}
 	if p.Status != domain.StatusActive {
-		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể lưu trữ sản phẩm đang hoạt động")
+		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể lưu trữ sản phẩm đang hoạt động")
 	}
 	p.Status = domain.StatusArchived
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"lưu trữ sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "lưu trữ sản phẩm thất bại")
 	}
 	return p, nil
 }
@@ -383,16 +370,16 @@ func (s *ProductService) Unarchive(ctx context.Context, id string, sellerID stri
 		return nil, err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return nil, apperror.New(apperror.CodeForbidden,"bạn chỉ có thể khôi phục sản phẩm của mình")
+		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể khôi phục sản phẩm của mình")
 	}
 	if p.Status != domain.StatusArchived {
-		return nil, apperror.New(apperror.CodeBadRequest,"chỉ có thể khôi phục sản phẩm đã lưu trữ")
+		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể khôi phục sản phẩm đã lưu trữ")
 	}
 	p.Status = domain.StatusActive
 	now := time.Now()
 	p.PublishedAt = &now
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"khôi phục sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "khôi phục sản phẩm thất bại")
 	}
 	return p, nil
 }
@@ -400,7 +387,7 @@ func (s *ProductService) Unarchive(ctx context.Context, id string, sellerID stri
 func (s *ProductService) GetModeration(ctx context.Context, id string) ([]domain.ProductModeration, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	return s.repo.ListModerations(ctx, oid)
 }
@@ -408,7 +395,7 @@ func (s *ProductService) GetModeration(ctx context.Context, id string) ([]domain
 func (s *ProductService) MyProducts(ctx context.Context, sellerID string, status string, cursor string, limit int) ([]domain.Product, string, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
+		return nil, "", apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
 	}
 	return s.repo.ListBySellerID(ctx, sid, status, cursor, limit)
 }
@@ -416,7 +403,7 @@ func (s *ProductService) MyProducts(ctx context.Context, sellerID string, status
 func (s *ProductService) SellerProducts(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Product, string, error) {
 	sid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"seller_id không hợp lệ")
+		return nil, "", apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
 	}
 	return s.repo.ListBySellerID(ctx, sid, string(domain.StatusActive), cursor, limit)
 }
@@ -436,7 +423,7 @@ func (s *ProductService) Select(ctx context.Context, cursor string, limit int) (
 func (s *ProductService) Similar(ctx context.Context, id string, limit int) ([]domain.Product, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	return s.repo.ListSimilar(ctx, oid, limit)
 }
@@ -444,7 +431,7 @@ func (s *ProductService) Similar(ctx context.Context, id string, limit int) ([]d
 func (s *ProductService) TrackView(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	return s.repo.IncrementStat(ctx, oid, "view_count", 1)
 }
@@ -452,7 +439,7 @@ func (s *ProductService) TrackView(ctx context.Context, id string) error {
 func (s *ProductService) GetStats(ctx context.Context, id string) (*domain.ProductStats, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return nil, apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	return s.repo.GetStats(ctx, oid)
 }
@@ -464,13 +451,13 @@ func (s *ProductService) Approve(ctx context.Context, id string, moderatorID str
 		return nil, err
 	}
 	if p.Status != domain.StatusPending {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only approve pending products")
+		return nil, apperror.New(apperror.CodeBadRequest, "can only approve pending products")
 	}
 	p.Status = domain.StatusActive
 	now := time.Now()
 	p.PublishedAt = &now
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to approve product")
+		return nil, apperror.New(apperror.CodeInternal, "failed to approve product")
 	}
 
 	modID, _ := bson.ObjectIDFromHex(moderatorID)
@@ -488,11 +475,11 @@ func (s *ProductService) Reject(ctx context.Context, id string, moderatorID stri
 		return nil, err
 	}
 	if p.Status != domain.StatusPending {
-		return nil, apperror.New(apperror.CodeBadRequest,"can only reject pending products")
+		return nil, apperror.New(apperror.CodeBadRequest, "can only reject pending products")
 	}
 	p.Status = domain.StatusDraft
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to reject product")
+		return nil, apperror.New(apperror.CodeInternal, "failed to reject product")
 	}
 
 	modID, _ := bson.ObjectIDFromHex(moderatorID)
@@ -514,7 +501,7 @@ func (s *ProductService) SetFeatured(ctx context.Context, id string, featured bo
 	}
 	p.IsFeatured = featured
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to update featured status")
+		return nil, apperror.New(apperror.CodeInternal, "failed to update featured status")
 	}
 	return p, nil
 }
@@ -526,7 +513,7 @@ func (s *ProductService) SetVerified(ctx context.Context, id string) (*domain.Pr
 	}
 	p.IsVerified = true
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to verify product")
+		return nil, apperror.New(apperror.CodeInternal, "failed to verify product")
 	}
 	return p, nil
 }
@@ -538,7 +525,7 @@ func (s *ProductService) SetSelect(ctx context.Context, id string, sp *domain.Se
 	}
 	p.IsSelect = true
 	if err := s.repo.Update(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"failed to set select")
+		return nil, apperror.New(apperror.CodeInternal, "failed to set select")
 	}
 	sp.ProductID = p.ID
 	_ = s.repo.CreateSelectProduct(ctx, sp)
@@ -548,7 +535,7 @@ func (s *ProductService) SetSelect(ctx context.Context, id string, sp *domain.Se
 func (s *ProductService) HardDelete(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return apperror.New(apperror.CodeBadRequest,"ID sản phẩm không hợp lệ")
+		return apperror.New(apperror.CodeBadRequest, "ID sản phẩm không hợp lệ")
 	}
 	return s.repo.SoftDelete(ctx, oid)
 }
@@ -652,24 +639,4 @@ func (s *ProductService) invalidateProductCache(ctx context.Context, id, slug st
 		fmt.Sprintf(productCacheByID, id),
 		fmt.Sprintf(productCacheBySlug, slug),
 	)
-}
-
-func generateSlug(title string) string {
-	slug := strings.ToLower(title)
-	var b strings.Builder
-	for _, r := range slug {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			b.WriteRune(r)
-		} else if r == ' ' || r == '-' {
-			b.WriteRune('-')
-		}
-	}
-	result := b.String()
-	// Remove consecutive dashes
-	for strings.Contains(result, "--") {
-		result = strings.ReplaceAll(result, "--", "-")
-	}
-	result = strings.Trim(result, "-")
-	// Append timestamp suffix for uniqueness
-	return fmt.Sprintf("%s-%d", result, time.Now().UnixMilli()%100000)
 }

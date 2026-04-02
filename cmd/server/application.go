@@ -6,18 +6,21 @@ import (
 	"strings"
 	"time"
 
+	"be-modami-core-service/config"
+	_ "be-modami-core-service/docs" // swagger generated
+	"be-modami-core-service/internal/adapter/consumer"
+	"be-modami-core-service/internal/adapter/handler"
+	hmw "be-modami-core-service/internal/adapter/handler/middleware"
+	"be-modami-core-service/internal/adapter/repository"
+	"be-modami-core-service/internal/adapter/producer"
+	"be-modami-core-service/internal/port"
+	"be-modami-core-service/internal/service"
+	kafkapkg "be-modami-core-service/pkg/kafka"
+	"be-modami-core-service/pkg/storage/database/mongodb"
+	redisstorage "be-modami-core-service/pkg/storage/redis"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/modami/core-service/config"
-	_ "github.com/modami/core-service/docs" // swagger generated
-	"github.com/modami/core-service/internal/adapter/consumer"
-	"github.com/modami/core-service/internal/adapter/handler"
-	hmw "github.com/modami/core-service/internal/adapter/handler/middleware"
-	"github.com/modami/core-service/internal/adapter/repository"
-	"github.com/modami/core-service/internal/service"
-	kafkapkg "github.com/modami/core-service/pkg/kafka"
-	"github.com/modami/core-service/pkg/storage/database/mongodb"
-	redisstorage "github.com/modami/core-service/pkg/storage/redis"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
@@ -61,7 +64,11 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		}
 	}
 
-	productSvc := service.NewProductService(productRepo, categoryRepo, redisCache, kafkaProducer)
+	var productProducer port.ProductProducer
+	if kafkaProducer != nil {
+		productProducer = producer.NewProductProducer(kafkaProducer)
+	}
+	productSvc := service.NewProductService(productRepo, categoryRepo, redisCache, productProducer)
 	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
 	blogSvc := service.NewBlogService(blogRepo)

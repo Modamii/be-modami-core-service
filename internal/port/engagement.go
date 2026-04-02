@@ -3,7 +3,8 @@ package port
 import (
 	"context"
 
-	"github.com/modami/core-service/internal/domain"
+	"be-modami-core-service/internal/domain"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 

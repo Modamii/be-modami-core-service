@@ -5,8 +5,9 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/port"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/port"
+
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 
@@ -51,7 +52,7 @@ type SellerPublicStats struct {
 func (s *SellerService) GetProfile(ctx context.Context, sellerID string) (*SellerProfile, error) {
 	oid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid seller id")
+		return nil, apperror.New(apperror.CodeBadRequest, "invalid seller id")
 	}
 
 	followers, _ := s.followRepo.CountFollowers(ctx, oid)
@@ -67,7 +68,7 @@ func (s *SellerService) GetProfile(ctx context.Context, sellerID string) (*Selle
 func (s *SellerService) GetProducts(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Product, string, error) {
 	oid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"invalid seller id")
+		return nil, "", apperror.New(apperror.CodeBadRequest, "invalid seller id")
 	}
 	return s.productRepo.ListBySellerID(ctx, oid, string(domain.StatusActive), cursor, limit)
 }
@@ -75,7 +76,7 @@ func (s *SellerService) GetProducts(ctx context.Context, sellerID string, cursor
 func (s *SellerService) GetReviews(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Review, string, error) {
 	oid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest,"invalid seller id")
+		return nil, "", apperror.New(apperror.CodeBadRequest, "invalid seller id")
 	}
 	return s.reviewRepo.ListBySeller(ctx, oid, cursor, limit)
 }
@@ -83,7 +84,7 @@ func (s *SellerService) GetReviews(ctx context.Context, sellerID string, cursor 
 func (s *SellerService) GetPublicStats(ctx context.Context, sellerID string) (*SellerPublicStats, error) {
 	oid, err := bson.ObjectIDFromHex(sellerID)
 	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest,"invalid seller id")
+		return nil, apperror.New(apperror.CodeBadRequest, "invalid seller id")
 	}
 
 	activeCount, _ := s.productRepo.CountByStatus(ctx, domain.StatusActive)

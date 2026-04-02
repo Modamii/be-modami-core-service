@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	config "github.com/modami/core-service/config"
-	es "github.com/modami/core-service/pkg/elasticsearch"
-	mongodb "github.com/modami/core-service/pkg/storage/database/mongodb"
-	redisStorage "github.com/modami/core-service/pkg/storage/redis"
+	config "be-modami-core-service/config"
+	es "be-modami-core-service/pkg/elasticsearch"
+	mongodb "be-modami-core-service/pkg/storage/database/mongodb"
+	redisStorage "be-modami-core-service/pkg/storage/redis"
 
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 

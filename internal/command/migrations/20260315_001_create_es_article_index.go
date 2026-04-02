@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/modami/core-service/internal/command"
-	es "github.com/modami/core-service/pkg/elasticsearch"
+	"be-modami-core-service/internal/command"
+	es "be-modami-core-service/pkg/elasticsearch"
 
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 

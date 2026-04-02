@@ -6,9 +6,10 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/dto"
-	"github.com/modami/core-service/internal/port"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/dto"
+	"be-modami-core-service/internal/port"
+
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 

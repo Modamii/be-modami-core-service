@@ -5,11 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/service"
-	"github.com/modami/core-service/pkg/validator"
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/service"
+	"be-modami-core-service/pkg/validator"
+
 	"gitlab.com/lifegoeson-libs/pkg-gokit/response"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type MasterdataHandler struct {
@@ -292,4 +293,3 @@ func (h *MasterdataHandler) AdminReorderCategories(c *gin.Context) {
 	}
 	noContent(c)
 }
-

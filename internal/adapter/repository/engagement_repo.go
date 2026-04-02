@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/modami/core-service/internal/domain"
-	"github.com/modami/core-service/internal/port"
+	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/port"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"github.com/modami/core-service/pkg/storage/database/mongodb/pagination"
+	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
 )
 
 // ---------------------------------------------------------------------------

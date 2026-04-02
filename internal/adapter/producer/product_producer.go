@@ -3,163 +3,113 @@ package producer
 import (
 	"context"
 	"fmt"
-	"techinsight-api/internal/entity"
-	"techinsight-api/pkg/kafka"
-	"techinsight-api/pkg/kafka/events"
+	"time"
 
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
-
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
+
+	"be-modami-core-service/internal/domain"
+	internalevents "be-modami-core-service/internal/events"
+	"be-modami-core-service/pkg/kafka"
+	kafkaevents "be-modami-core-service/pkg/kafka/events"
 )
 
-type ArticleProducer struct {
-	kafkaService *kafka.KafkaService
+type ProductProducer struct {
+	producer kafka.Producer
 }
 
-func NewArticleProducer(kafkaService *kafka.KafkaService, ctx context.Context) *ArticleProducer {
-	return &ArticleProducer{
-		kafkaService: kafkaService,
+func NewProductProducer(producer kafka.Producer) *ProductProducer {
+	return &ProductProducer{producer: producer}
+}
+
+func (p *ProductProducer) ProductCreatedWithData(ctx context.Context, product *domain.Product) error {
+	catID, catName := categoryFields(product)
+	payload := &internalevents.ProductCreatedPayload{
+		BaseEventPayload: kafkaevents.BaseEventPayload{
+			Type:      internalevents.EventTypeProductCreated,
+			Timestamp: time.Now(),
+		},
+		ProductID:    product.ID.Hex(),
+		Slug:         product.Slug,
+		Title:        product.Title,
+		SellerID:     product.SellerID.Hex(),
+		CategoryID:   catID,
+		CategoryName: catName,
+		Status:       string(product.Status),
+		Price:        product.Price,
+		Brand:        product.Brand,
+		Condition:    product.Condition,
+		Hashtags:     product.Hashtags,
+		Images:       imageURLs(product),
+		CreatedAt:    product.CreatedAt,
 	}
+	return p.emit(ctx, kafka.TopicProductCreated, product.ID.Hex(), payload, "product created")
 }
 
-func (p *ArticleProducer) PublishArticleCreatedEvent(ctx context.Context, event *events.ArticleCreatedEvent) error {
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Created, event.ArticleID, event)
+func (p *ProductProducer) ProductUpdatedWithData(ctx context.Context, product *domain.Product) error {
+	catID, catName := categoryFields(product)
+	payload := &internalevents.ProductUpdatedPayload{
+		BaseEventPayload: kafkaevents.BaseEventPayload{
+			Type:      internalevents.EventTypeProductUpdated,
+			Timestamp: time.Now(),
+		},
+		ProductID:    product.ID.Hex(),
+		Slug:         product.Slug,
+		Title:        product.Title,
+		SellerID:     product.SellerID.Hex(),
+		CategoryID:   catID,
+		CategoryName: catName,
+		Status:       string(product.Status),
+		Price:        product.Price,
+		Brand:        product.Brand,
+		Condition:    product.Condition,
+		Hashtags:     product.Hashtags,
+		Images:       imageURLs(product),
+		UpdatedAt:    product.UpdatedAt,
+	}
+	return p.emit(ctx, kafka.TopicProductUpdated, product.ID.Hex(), payload, "product updated")
 }
 
-func (p *ArticleProducer) PublishArticleDeletedEvent(ctx context.Context, event *events.ArticleDeletedEvent) error {
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Deleted, event.ArticleID, event)
+func (p *ProductProducer) ProductDeleted(ctx context.Context, productID, slug string) error {
+	payload := &internalevents.ProductDeletedPayload{
+		BaseEventPayload: kafkaevents.BaseEventPayload{
+			Type:      internalevents.EventTypeProductDeleted,
+			Timestamp: time.Now(),
+		},
+		ProductID: productID,
+		Slug:      slug,
+	}
+	return p.emit(ctx, kafka.TopicProductDeleted, productID, payload, "product deleted")
 }
 
-func (p *ArticleProducer) PublishArticleLikedEvent(ctx context.Context, event *events.ArticleLikedEvent) error {
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Liked, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) PublishArticleSharedEvent(ctx context.Context, event *events.ArticleSharedEvent) error {
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Shared, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) PublishArticleUpdatedEvent(ctx context.Context, event *events.ArticleUpdatedEvent) error {
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Updated, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) ArticleCreated(ctx context.Context, articleID, categoryID, authorID, title, description string) error {
-	event := events.NewArticleCreatedEvent(articleID, categoryID, authorID, title, description)
-	return p.PublishArticleCreatedEvent(ctx, event)
-}
-
-func (p *ArticleProducer) ArticleDeleted(ctx context.Context, articleID, categoryID, authorID string) error {
-	event := events.NewArticleDeletedEvent(articleID, categoryID, authorID)
-	return p.PublishArticleDeletedEvent(ctx, event)
-}
-
-func (p *ArticleProducer) ArticleViewed(ctx context.Context, articleID string) {
-	event := events.NewArticleViewedEvent(articleID)
-	p.publishEventAsync(ctx, kafka.GetKafkaTopics().Article.Viewed, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) ArticleLiked(ctx context.Context, articleID, authorID string) {
-	event := events.NewArticleLikedEvent(articleID, authorID)
-	p.publishEventAsync(ctx, kafka.GetKafkaTopics().Article.Liked, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) ArticleShared(ctx context.Context, articleID, authorID string) {
-	event := events.NewArticleSharedEvent(articleID, authorID)
-	p.publishEventAsync(ctx, kafka.GetKafkaTopics().Article.Shared, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) ArticleCreatedWithData(ctx context.Context, article *entity.Article) error {
-	eventData := p.convertArticleToEventData(article)
-	event := events.NewArticleCreatedEventWithData(eventData)
-	return p.PublishArticleCreatedEvent(ctx, event)
-}
-
-func (p *ArticleProducer) ArticleUpdated(ctx context.Context, article *entity.Article) error {
-	eventData := p.convertArticleToEventData(article)
-	event := events.NewArticleUpdatedEvent(eventData)
-	return p.publishEvent(ctx, kafka.GetKafkaTopics().Article.Updated, event.ArticleID, event)
-}
-
-func (p *ArticleProducer) publishEvent(ctx context.Context, topic, key string, event interface{}) error {
-	message := &kafka.ProducerMessage{
+func (p *ProductProducer) emit(ctx context.Context, topic, key string, payload interface{}, eventName string) error {
+	if err := p.producer.Emit(ctx, topic, &kafka.ProducerMessage{
 		Key:   key,
-		Value: event,
-	}
-	if err := p.kafkaService.Emit(ctx, topic, message); err != nil {
-		logger.FromContext(ctx).Error("Failed to publish article event", err,
-			logging.String("topic", topic),
-			logging.String("key", key),
+		Value: payload,
+	}); err != nil {
+		logger.FromContext(ctx).Error("failed to publish "+eventName+" event", err,
+			logging.String("productId", key),
 		)
-		return fmt.Errorf("failed to publish article event: %w", err)
+		return fmt.Errorf("failed to publish %s event: %w", eventName, err)
 	}
-	logger.FromContext(ctx).Debug("Published article event",
-		logging.String("topic", topic),
-		logging.String("key", key),
+	logger.FromContext(ctx).Debug("published "+eventName+" event",
+		logging.String("productId", key),
 	)
 	return nil
 }
 
-func (p *ArticleProducer) publishEventAsync(ctx context.Context, topic, key string, event interface{}) {
-	message := &kafka.ProducerMessage{
-		Key:   key,
-		Value: event,
+func imageURLs(product *domain.Product) []string {
+	urls := make([]string, 0, len(product.Images))
+	for _, img := range product.Images {
+		urls = append(urls, img.URL)
 	}
-	p.kafkaService.EmitAsync(ctx, topic, message)
-	logger.FromContext(ctx).Debug("Published article event async",
-		logging.String("topic", topic),
-		logging.String("key", key),
-	)
+	return urls
 }
 
-func (p *ArticleProducer) convertArticleToEventData(article *entity.Article) *events.ArticleEventData {
-	eventData := &events.ArticleEventData{
-		ID:          article.IDHex,
-		Slug:        article.Slug,
-		Title:       article.Title,
-		Description: article.Description,
-		Content:     article.Content,
-		Image:       article.Image,
-		Status:      string(article.Status),
-		IsPremium:   article.IsPremium,
-		IsFeatured:  article.IsFeatured,
-		ReadTime:    article.ReadTime,
-		PublishedAt: article.PublishedAt,
-		ScheduledAt: article.ScheduledAt,
-		CreatedAt:   article.CreatedAt,
-		UpdatedAt:   article.UpdatedAt,
+func categoryFields(product *domain.Product) (id, name string) {
+	if product.Category != nil {
+		id = product.Category.ID.Hex()
+		name = product.Category.Name
 	}
-	eventData.Author = events.ArticleAuthorEventData{
-		ID:        article.Author.IDHex,
-		FirstName: article.Author.FirstName,
-		LastName:  article.Author.LastName,
-		Image:     article.Author.Image,
-		Bio:       article.Author.Bio,
-	}
-	eventData.Category = events.ArticleCategoryEventData{
-		ID:          article.Category.IDHex,
-		Name:        article.Category.Name,
-		Slug:        article.Category.Slug,
-		Image:       article.Category.Image,
-		Description: article.Category.Description,
-	}
-	var tags []events.ArticleTagEventData
-	for _, tag := range article.Tags {
-		tags = append(tags, events.ArticleTagEventData{
-			ID:   tag.IDHex,
-			Name: tag.Name,
-		})
-	}
-	eventData.Tags = tags
-	if article.SEO != nil {
-		eventData.SEO = &events.ArticleSEOEventData{
-			MetaTitle:       article.SEO.MetaTitle,
-			MetaDescription: article.SEO.MetaDescription,
-			MetaKeywords:    article.SEO.MetaKeywords,
-			OGTitle:         article.SEO.OGTitle,
-			OGDescription:   article.SEO.OGDescription,
-			OGImage:         article.SEO.OGImage,
-			TwitterCard:     article.SEO.TwitterCard,
-			CanonicalURL:    article.SEO.CanonicalURL,
-		}
-	}
-	return eventData
+	return
 }

@@ -3,10 +3,10 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/modami/core-service/internal/dto"
-	"github.com/modami/core-service/internal/service"
-	"github.com/modami/core-service/pkg/storage/database/mongodb/pagination"
-	"github.com/modami/core-service/pkg/validator"
+	"be-modami-core-service/internal/dto"
+	"be-modami-core-service/internal/service"
+	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"be-modami-core-service/pkg/validator"
 )
 
 // BlogHandler exposes public and admin HTTP endpoints for the Community & Blog feature.

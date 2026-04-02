@@ -3,8 +3,8 @@ package migrations
 import (
 	"context"
 
-	"github.com/modami/core-service/internal/command"
-	mongodb "github.com/modami/core-service/pkg/storage/database/mongodb"
+	"be-modami-core-service/internal/command"
+	mongodb "be-modami-core-service/pkg/storage/database/mongodb"
 
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 

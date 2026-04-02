@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"be-modami-core-service/pkg/validator"
+
 	"github.com/gin-gonic/gin"
-	"github.com/modami/core-service/pkg/storage/database/mongodb/pagination"
-	"github.com/modami/core-service/pkg/validator"
 	gokit "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 	"gitlab.com/lifegoeson-libs/pkg-gokit/response"
 )

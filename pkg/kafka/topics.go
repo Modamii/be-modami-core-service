@@ -13,6 +13,10 @@ const (
 	// Produced: events published by core-service
 	TopicProductCreated    = "modami.product.created"
 	TopicProductCreatedDLQ = "modami.product.created.dlq"
+	TopicProductUpdated    = "modami.product.updated"
+	TopicProductUpdatedDLQ = "modami.product.updated.dlq"
+	TopicProductDeleted    = "modami.product.deleted"
+	TopicProductDeletedDLQ = "modami.product.deleted.dlq"
 )
 
 // GetTopicWithEnv returns the fully-qualified topic name.
@@ -33,5 +37,9 @@ func GetAllTopics(env string) []string {
 		GetTopicWithEnv(env, TopicUserEventsDLQ),
 		GetTopicWithEnv(env, TopicProductCreated),
 		GetTopicWithEnv(env, TopicProductCreatedDLQ),
+		GetTopicWithEnv(env, TopicProductUpdated),
+		GetTopicWithEnv(env, TopicProductUpdatedDLQ),
+		GetTopicWithEnv(env, TopicProductDeleted),
+		GetTopicWithEnv(env, TopicProductDeletedDLQ),
 	}
 }
