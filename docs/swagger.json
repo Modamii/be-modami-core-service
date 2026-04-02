@@ -1003,6 +1003,32 @@
                 }
             }
         },
+        "/home-feeds": {
+            "get": {
+                "description": "Returns four sections for the home screen: newest products, top-level categories, featured products (near), and latest blog posts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Home feed",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.StandardSuccessEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.StandardErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/products": {
             "post": {
                 "security": [

@@ -19,7 +19,7 @@ cors:
 
 mongodb:
   uri: "mongodb://localhost:27017/?directConnection=true"
-  database: "techinsights-core-service"
+  database: "modami-core-service"
   timeout: 10s
   max_pool_size: 100
   min_pool_size: 0

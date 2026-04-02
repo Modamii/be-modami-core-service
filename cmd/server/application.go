@@ -72,12 +72,14 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
 	blogSvc := service.NewBlogService(blogRepo)
+	homeFeedSvc := service.NewHomeFeedService(productRepo, categoryRepo, blogRepo)
 
 	productH := handler.NewProductHandler(productSvc)
 	masterdataH := handler.NewMasterdataHandler(masterdataSvc)
 	sellerH := handler.NewSellerHandler(sellerSvc)
 	searchH := handler.NewSearchHandler(productH, masterdataH)
 	blogH := handler.NewBlogHandler(blogSvc)
+	homeFeedH := handler.NewHomeFeedHandler(homeFeedSvc)
 
 	_ = favoriteRepo
 	_ = savedProductRepo
@@ -105,6 +107,8 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := router.Group("/v1/core-services")
+
+	v1.GET("/home-feeds", homeFeedH.GetHomeFeed)
 
 	v1.GET("/products/feed", productH.Feed)
 	v1.GET("/products/featured", productH.Featured)

@@ -146,7 +146,7 @@ func (h *MasterdataHandler) CreateCategory(c *gin.Context) {
 		Icon:      req.Icon,
 		SortOrder: req.SortOrder,
 	}
-	if req.ParentID != nil {
+	if req.ParentID != nil && *req.ParentID != "" {
 		oid, err := bson.ObjectIDFromHex(*req.ParentID)
 		if err != nil {
 			response.BadRequest(c.Writer, "parent_id không hợp lệ")
