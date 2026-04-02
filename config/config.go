@@ -65,7 +65,8 @@ type KeycloakConfig struct {
 }
 
 type CORSConfig struct {
-	AllowedOrigins []string `mapstructure:"allowed_origins"`
+	AllowedOrigins   []string `mapstructure:"allowed_origins"`
+	AllowCredentials bool     `mapstructure:"allow_credentials"`
 }
 
 type RedisConfig struct {
@@ -139,6 +140,13 @@ func Load() (*Config, error) {
 	v.SetDefault("observability.log_level", "info")
 	v.SetDefault("observability.environment", "development")
 	v.SetDefault("kafka.env", "development")
+	v.SetDefault("cors.allow_credentials", true)
+	v.SetDefault("cors.allowed_origins", []string{
+		"http://localhost:5173",
+		"http://localhost:3000",
+		"http://localhost:8080",
+		"http://localhost:8081",
+	})
 
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {

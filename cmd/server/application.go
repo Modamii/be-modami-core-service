@@ -94,11 +94,20 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	origins := cfg.CORS.AllowedOrigins
+	if len(origins) == 0 {
+		origins = []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"http://localhost:8080",
+			"http://localhost:8081",
+		}
+	}
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.CORS.AllowedOrigins,
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
-		AllowCredentials: true,
+		AllowCredentials: cfg.CORS.AllowCredentials,
 		MaxAge:           300,
 	}))
 
