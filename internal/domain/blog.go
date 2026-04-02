@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-// PostStatus represents the publication state of a blog post.
 type PostStatus string
 
 const (
@@ -14,12 +13,11 @@ const (
 	PostStatusPublished PostStatus = "published"
 )
 
-// PostDepth indicates the reading depth / complexity of a blog post.
 type PostDepth string
 
 const (
-	PostDepthQuick PostDepth = "quick" // Đọc nhanh
-	PostDepthDeep  PostDepth = "deep"  // Chuyên sâu
+	PostDepthQuick PostDepth = "quick"
+	PostDepthDeep  PostDepth = "deep"
 )
 
 // BlogAuthor holds the embedded author metadata for a blog post.
@@ -54,11 +52,11 @@ type BlogPost struct {
 	ReadTimeMin int `bson:"read_time_min" json:"read_time_min"`
 	WordCount   int `bson:"word_count"    json:"word_count"`
 
-	Author    BlogAuthor `bson:"author"              json:"author"`
-	KeyPoints  []string  `bson:"key_points,omitempty"  json:"key_points,omitempty"`
-	References []string  `bson:"references,omitempty"  json:"references,omitempty"`
-	Hashtags   []string  `bson:"hashtags,omitempty"    json:"hashtags,omitempty"`
-	CTALink    string    `bson:"cta_link,omitempty"    json:"cta_link,omitempty"`
+	Author     BlogAuthor `bson:"author"              json:"author"`
+	KeyPoints  []string   `bson:"key_points,omitempty"  json:"key_points,omitempty"`
+	References []string   `bson:"references,omitempty"  json:"references,omitempty"`
+	Hashtags   []string   `bson:"hashtags,omitempty"    json:"hashtags,omitempty"`
+	CTALink    string     `bson:"cta_link,omitempty"    json:"cta_link,omitempty"`
 
 	IsFeatured bool       `bson:"is_featured" json:"is_featured"`
 	Status     PostStatus `bson:"status"      json:"status"`

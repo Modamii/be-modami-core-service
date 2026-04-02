@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -28,14 +29,11 @@ var (
 	errForbidden    = gokit.New(gokit.CodeForbidden, "không có quyền truy cập")
 )
 
-// Auth validates Keycloak-issued JWTs via JWKS.
 type Auth struct {
 	jwksURL string
 	cache   *jwksCache
 }
 
-// NewAuth creates an Auth middleware. If jwksURL is empty, tokens are parsed
-// without signature verification (dev/test mode).
 func NewAuth(jwksURL string) *Auth {
 	a := &Auth{
 		jwksURL: jwksURL,
@@ -47,7 +45,6 @@ func NewAuth(jwksURL string) *Auth {
 	return a
 }
 
-// Required returns a gin middleware that enforces a valid Bearer token.
 func (a *Auth) Required() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		raw := c.GetHeader("Authorization")
@@ -112,39 +109,28 @@ func (a *Auth) Required() gin.HandlerFunc {
 	}
 }
 
-// UserID returns the authenticated user's ID (JWT sub claim) from context.
 func UserID(c *gin.Context) string {
 	val, _ := c.Get(ctxKeyUserID)
 	id, _ := val.(string)
 	return id
 }
 
-// Role returns the first realm role of the authenticated user (lowercased).
 func Role(c *gin.Context) string {
 	val, _ := c.Get(ctxKeyRole)
 	role, _ := val.(string)
 	return role
 }
 
-// Permissions returns the resource_access permissions for the authenticated user.
 func Permissions(c *gin.Context) []string {
 	val, _ := c.Get(ctxKeyPermissions)
 	perms, _ := val.([]string)
 	return perms
 }
 
-// HasPermission reports whether the authenticated user holds the given permission.
 func HasPermission(c *gin.Context, permission string) bool {
-	for _, p := range Permissions(c) {
-		if p == permission {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(Permissions(c), permission)
 }
 
-// RequirePermission returns a middleware that allows the request only when
-// the authenticated user holds the specified resource_access permission.
 func RequirePermission(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !HasPermission(c, permission) {
@@ -156,10 +142,8 @@ func RequirePermission(permission string) gin.HandlerFunc {
 	}
 }
 
-// parse validates and extracts claims from a JWT token string.
 func (a *Auth) parse(tokenStr string) (jwt.MapClaims, error) {
 	if a.jwksURL == "" {
-		// Dev mode: no signature verification
 		token, _, err := jwt.NewParser().ParseUnverified(tokenStr, jwt.MapClaims{})
 		if err != nil {
 			return nil, err
@@ -183,10 +167,6 @@ func (a *Auth) parse(tokenStr string) (jwt.MapClaims, error) {
 	}
 	return token.Claims.(jwt.MapClaims), nil
 }
-
-// ---------------------------------------------------------------------------
-// JWKS cache
-// ---------------------------------------------------------------------------
 
 type jwksCache struct {
 	mu          sync.RWMutex

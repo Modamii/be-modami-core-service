@@ -26,7 +26,6 @@ type Hashtag struct {
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-// CategoryOrder is the request payload for admin category reorder.
 type CategoryOrder struct {
 	ID        string `json:"id"`
 	SortOrder int    `json:"sort_order"`

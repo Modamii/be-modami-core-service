@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"be-modami-core-service/internal/domain"
+	"be-modami-core-service/internal/dto"
 	"be-modami-core-service/internal/service"
 	"be-modami-core-service/pkg/validator"
 
@@ -119,31 +120,13 @@ func (h *MasterdataHandler) SuggestHashtags(c *gin.Context) {
 	ok(c, tags)
 }
 
-// Admin category handlers
-type CreateCategoryRequest struct {
-	Name      string  `json:"name" validate:"required"`
-	NameVI    string  `json:"name_vi" validate:"required"`
-	Slug      string  `json:"slug" validate:"required"`
-	Icon      string  `json:"icon"`
-	ParentID  *string `json:"parent_id"`
-	SortOrder int     `json:"sort_order"`
-}
-
-type UpdateCategoryRequest struct {
-	Name      *string `json:"name"`
-	NameVI    *string `json:"name_vi"`
-	Slug      *string `json:"slug"`
-	Icon      *string `json:"icon"`
-	SortOrder *int    `json:"sort_order"`
-}
-
 // AdminCreateCategory godoc
 // @Summary Admin: create category
 // @Tags Admin
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param body body CreateCategoryRequest true "Category"
+// @Param body body dto.CreateCategoryRequest true "Category"
 // @Success 201 {object} StandardSuccessEnvelope
 // @Failure 400 {object} StandardErrorEnvelope
 // @Failure 401 {object} StandardErrorEnvelope
@@ -151,7 +134,7 @@ type UpdateCategoryRequest struct {
 // @Failure 500 {object} StandardErrorEnvelope
 // @Router /admin/categories [post]
 func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
-	var req CreateCategoryRequest
+	var req dto.CreateCategoryRequest
 	if errs := validator.DecodeAndValidateGin(c, &req); errs != nil {
 		validationResponse(c, errs)
 		return
@@ -185,7 +168,7 @@ func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Category ID"
-// @Param body body UpdateCategoryRequest true "Fields"
+// @Param body body dto.UpdateCategoryRequest true "Fields"
 // @Success 200 {object} StandardSuccessEnvelope
 // @Failure 400 {object} StandardErrorEnvelope
 // @Failure 401 {object} StandardErrorEnvelope
@@ -201,27 +184,13 @@ func (h *MasterdataHandler) AdminUpdateCategory(c *gin.Context) {
 		return
 	}
 
-	var req UpdateCategoryRequest
+	var req dto.UpdateCategoryRequest
 	if errs := validator.DecodeAndValidateGin(c, &req); errs != nil {
 		validationResponse(c, errs)
 		return
 	}
 
-	if req.Name != nil {
-		cat.Name = *req.Name
-	}
-	if req.NameVI != nil {
-		cat.NameVI = *req.NameVI
-	}
-	if req.Slug != nil {
-		cat.Slug = *req.Slug
-	}
-	if req.Icon != nil {
-		cat.Icon = *req.Icon
-	}
-	if req.SortOrder != nil {
-		cat.SortOrder = *req.SortOrder
-	}
+	req.ApplyTo(cat)
 
 	if err := h.svc.UpdateCategory(c.Request.Context(), cat); err != nil {
 		handleError(c, err)

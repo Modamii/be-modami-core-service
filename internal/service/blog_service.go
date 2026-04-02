@@ -13,7 +13,6 @@ import (
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 
-// CommunityFeed is the composite response for the community feed endpoint.
 type CommunityFeed struct {
 	Featured *domain.BlogPost  `json:"featured"`
 	Posts    []domain.BlogPost `json:"posts"`
@@ -21,18 +20,14 @@ type CommunityFeed struct {
 	HasMore  bool              `json:"has_more"`
 }
 
-// BlogService provides business logic for the Community & Blog feature.
 type BlogService struct {
 	repo port.BlogRepository
 }
 
-// NewBlogService creates a new BlogService backed by the given repository.
 func NewBlogService(repo port.BlogRepository) *BlogService {
 	return &BlogService{repo: repo}
 }
 
-// GetCommunityFeed returns the featured post together with the most recent
-// published posts for the community feed screen.
 func (s *BlogService) GetCommunityFeed(ctx context.Context, cursor string, limit int) (*CommunityFeed, error) {
 	featured, err := s.repo.GetFeatured(ctx)
 	if err != nil {
@@ -52,7 +47,6 @@ func (s *BlogService) GetCommunityFeed(ctx context.Context, cursor string, limit
 	}, nil
 }
 
-// GetPost returns a single published blog post by slug.
 func (s *BlogService) GetPost(ctx context.Context, slug string) (*domain.BlogPost, error) {
 	p, err := s.repo.GetBySlug(ctx, slug)
 	if err != nil {
@@ -64,8 +58,6 @@ func (s *BlogService) GetPost(ctx context.Context, slug string) (*domain.BlogPos
 	return p, nil
 }
 
-// ListPosts returns a cursor-paginated list of published posts, optionally
-// filtered by postType.
 func (s *BlogService) ListPosts(ctx context.Context, postType string, cursor string, limit int) ([]domain.BlogPost, string, error) {
 	posts, next, err := s.repo.List(ctx, postType, cursor, limit)
 	if err != nil {
@@ -74,7 +66,6 @@ func (s *BlogService) ListPosts(ctx context.Context, postType string, cursor str
 	return posts, next, nil
 }
 
-// ListTrendReports returns the paginated monthly trend report listing.
 func (s *BlogService) ListTrendReports(ctx context.Context, cursor string, limit int) ([]domain.BlogPost, string, error) {
 	posts, next, err := s.repo.ListTrendReports(ctx, cursor, limit)
 	if err != nil {
@@ -83,7 +74,6 @@ func (s *BlogService) ListTrendReports(ctx context.Context, cursor string, limit
 	return posts, next, nil
 }
 
-// ListByHashtag returns posts tagged with the given hashtag.
 func (s *BlogService) ListByHashtag(ctx context.Context, tag string, cursor string, limit int) ([]domain.BlogPost, string, error) {
 	posts, next, err := s.repo.ListByHashtag(ctx, tag, cursor, limit)
 	if err != nil {
@@ -92,9 +82,6 @@ func (s *BlogService) ListByHashtag(ctx context.Context, tag string, cursor stri
 	return posts, next, nil
 }
 
-// -- Admin operations --------------------------------------------------------
-
-// CreatePost creates a new blog post from the admin request payload.
 func (s *BlogService) CreatePost(ctx context.Context, req dto.CreateBlogPostRequest) (*domain.BlogPost, error) {
 	p := &domain.BlogPost{
 		Slug:          req.Slug,
@@ -129,7 +116,6 @@ func (s *BlogService) CreatePost(ctx context.Context, req dto.CreateBlogPostRequ
 	return p, nil
 }
 
-// UpdatePost applies partial updates from the admin request to the stored post.
 func (s *BlogService) UpdatePost(ctx context.Context, id string, req dto.UpdateBlogPostRequest) (*domain.BlogPost, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -144,67 +130,7 @@ func (s *BlogService) UpdatePost(ctx context.Context, id string, req dto.UpdateB
 		return nil, apperror.New(apperror.CodeNotFound, "không tìm thấy bài viết")
 	}
 
-	if req.Slug != nil {
-		p.Slug = *req.Slug
-	}
-	if req.SeriesName != nil {
-		p.SeriesName = *req.SeriesName
-	}
-	if req.SeriesNo != nil {
-		p.SeriesNo = *req.SeriesNo
-	}
-	if req.SeriesQuarter != nil {
-		p.SeriesQuarter = *req.SeriesQuarter
-	}
-	if req.PostType != nil {
-		p.PostType = *req.PostType
-	}
-	if req.Depth != nil {
-		p.Depth = domain.PostDepth(*req.Depth)
-	}
-	if req.Title != nil {
-		p.Title = *req.Title
-	}
-	if req.Subtitle != nil {
-		p.Subtitle = *req.Subtitle
-	}
-	if req.Body != nil {
-		p.Body = *req.Body
-	}
-	if req.CoverImage != nil {
-		p.CoverImage = *req.CoverImage
-	}
-	if req.CoverCaption != nil {
-		p.CoverCaption = *req.CoverCaption
-	}
-	if req.ReadTimeMin != nil {
-		p.ReadTimeMin = *req.ReadTimeMin
-	}
-	if req.WordCount != nil {
-		p.WordCount = *req.WordCount
-	}
-	if req.Author != nil {
-		p.Author = domain.BlogAuthor{
-			Name:  req.Author.Name,
-			Title: req.Author.Title,
-			Bio:   req.Author.Bio,
-		}
-	}
-	if req.KeyPoints != nil {
-		p.KeyPoints = req.KeyPoints
-	}
-	if req.References != nil {
-		p.References = req.References
-	}
-	if req.Hashtags != nil {
-		p.Hashtags = req.Hashtags
-	}
-	if req.CTALink != nil {
-		p.CTALink = *req.CTALink
-	}
-	if req.IsFeatured != nil {
-		p.IsFeatured = *req.IsFeatured
-	}
+	req.ApplyTo(p)
 
 	if err := s.repo.Update(ctx, p); err != nil {
 		return nil, apperror.New(apperror.CodeInternal, "cập nhật bài viết thất bại")
@@ -212,7 +138,6 @@ func (s *BlogService) UpdatePost(ctx context.Context, id string, req dto.UpdateB
 	return p, nil
 }
 
-// DeletePost hard-deletes a blog post by ID.
 func (s *BlogService) DeletePost(ctx context.Context, id string) error {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -231,7 +156,6 @@ func (s *BlogService) DeletePost(ctx context.Context, id string) error {
 	return nil
 }
 
-// PublishPost transitions a draft post to published status and records the publish time.
 func (s *BlogService) PublishPost(ctx context.Context, id string) (*domain.BlogPost, error) {
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {

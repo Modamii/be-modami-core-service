@@ -15,10 +15,12 @@ import (
 	"be-modami-core-service/internal/port"
 	"be-modami-core-service/pkg/elasticsearch"
 	"be-modami-core-service/pkg/kafka"
+	"be-modami-core-service/pkg/storage/redis"
 )
 
 type SyncProductConsumer struct {
 	esClient    *elasticsearch.Client
+	cacheClient *redis.RedisClient
 	productRepo port.ProductRepository
 }
 
@@ -37,16 +39,19 @@ func (c *SyncProductConsumer) GetTopics() []string {
 func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Record) error {
 	switch record.Topic {
 	case kafka.TopicProductCreated, kafka.TopicProductUpdated:
-		return c.handleUpsert(ctx, record)
+		c.handleESUpsert(ctx, record)
+		c.handlerCacheDelete(ctx, record)
+		return nil
 	case kafka.TopicProductDeleted:
-		return c.handleDelete(ctx, record)
+		c.handleESDelete(ctx, record)
+		c.handlerCacheDelete(ctx, record)
+		return nil
 	default:
 		return nil
 	}
 }
 
-func (c *SyncProductConsumer) handleUpsert(ctx context.Context, record *kgo.Record) error {
-	// Both created and updated events share the productId field at top level
+func (c *SyncProductConsumer) handleESUpsert(ctx context.Context, record *kgo.Record) error {
 	var base struct {
 		ProductID string `json:"productId"`
 	}
@@ -79,7 +84,22 @@ func (c *SyncProductConsumer) handleUpsert(ctx context.Context, record *kgo.Reco
 	return nil
 }
 
-func (c *SyncProductConsumer) handleDelete(ctx context.Context, record *kgo.Record) error {
+func (c *SyncProductConsumer) handlerCacheDelete(ctx context.Context, record *kgo.Record) error {
+	var payload events.ProductDeletedPayload
+	if err := json.Unmarshal(record.Value, &payload); err != nil {
+		return fmt.Errorf("unmarshal product deleted event: %w", err)
+	}
+
+	if err := c.cacheClient.Delete(ctx, payload.ProductID); err != nil {
+		logger.Error(ctx, "sync: cache delete failed", err, logging.String("id", payload.ProductID))
+		return err
+	}
+
+	logger.Info(ctx, "sync: product deleted from cache", logging.String("id", payload.ProductID))
+	return nil
+}
+
+func (c *SyncProductConsumer) handleESDelete(ctx context.Context, record *kgo.Record) error {
 	var payload events.ProductDeletedPayload
 	if err := json.Unmarshal(record.Value, &payload); err != nil {
 		return fmt.Errorf("unmarshal product deleted event: %w", err)

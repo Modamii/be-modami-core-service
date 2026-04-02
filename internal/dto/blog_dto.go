@@ -1,13 +1,13 @@
 package dto
 
-// AuthorDTO is the request payload for embedded author data.
+import "be-modami-core-service/internal/domain"
+
 type AuthorDTO struct {
 	Name  string `json:"name"`
 	Title string `json:"title"`
 	Bio   string `json:"bio"`
 }
 
-// CreateBlogPostRequest is the payload for creating a new blog post.
 type CreateBlogPostRequest struct {
 	Slug          string    `json:"slug"           validate:"required"`
 	SeriesName    string    `json:"series_name"`
@@ -30,8 +30,6 @@ type CreateBlogPostRequest struct {
 	IsFeatured    bool      `json:"is_featured"`
 }
 
-// UpdateBlogPostRequest is the payload for updating an existing blog post.
-// All fields are optional — only non-nil pointer values are applied.
 type UpdateBlogPostRequest struct {
 	Slug          *string    `json:"slug"`
 	SeriesName    *string    `json:"series_name"`
@@ -52,4 +50,69 @@ type UpdateBlogPostRequest struct {
 	Hashtags      []string   `json:"hashtags"`
 	CTALink       *string    `json:"cta_link"`
 	IsFeatured    *bool      `json:"is_featured"`
+}
+
+// ApplyTo patches p with every non-nil field in the request.
+func (r *UpdateBlogPostRequest) ApplyTo(p *domain.BlogPost) {
+	if r.Slug != nil {
+		p.Slug = *r.Slug
+	}
+	if r.SeriesName != nil {
+		p.SeriesName = *r.SeriesName
+	}
+	if r.SeriesNo != nil {
+		p.SeriesNo = *r.SeriesNo
+	}
+	if r.SeriesQuarter != nil {
+		p.SeriesQuarter = *r.SeriesQuarter
+	}
+	if r.PostType != nil {
+		p.PostType = *r.PostType
+	}
+	if r.Depth != nil {
+		p.Depth = domain.PostDepth(*r.Depth)
+	}
+	if r.Title != nil {
+		p.Title = *r.Title
+	}
+	if r.Subtitle != nil {
+		p.Subtitle = *r.Subtitle
+	}
+	if r.Body != nil {
+		p.Body = *r.Body
+	}
+	if r.CoverImage != nil {
+		p.CoverImage = *r.CoverImage
+	}
+	if r.CoverCaption != nil {
+		p.CoverCaption = *r.CoverCaption
+	}
+	if r.ReadTimeMin != nil {
+		p.ReadTimeMin = *r.ReadTimeMin
+	}
+	if r.WordCount != nil {
+		p.WordCount = *r.WordCount
+	}
+	if r.Author != nil {
+		p.Author = domain.BlogAuthor{
+			Name:  r.Author.Name,
+			Title: r.Author.Title,
+			Bio:   r.Author.Bio,
+		}
+	}
+	if r.KeyPoints != nil {
+		p.KeyPoints = r.KeyPoints
+	}
+	if r.References != nil {
+		p.References = r.References
+	}
+	if r.Hashtags != nil {
+		p.Hashtags = r.Hashtags
+	}
+	if r.CTALink != nil {
+		p.CTALink = *r.CTALink
+	}
+	if r.IsFeatured != nil {
+		p.IsFeatured = *r.IsFeatured
+	}
 }

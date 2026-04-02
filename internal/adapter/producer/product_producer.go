@@ -2,7 +2,6 @@ package producer
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
@@ -43,7 +42,7 @@ func (p *ProductProducer) ProductCreatedWithData(ctx context.Context, product *d
 		Images:       imageURLs(product),
 		CreatedAt:    product.CreatedAt,
 	}
-	return p.emit(ctx, kafka.TopicProductCreated, product.ID.Hex(), payload, "product created")
+	return p.emitAsync(ctx, kafka.TopicProductCreated, product.ID.Hex(), payload, "product created")
 }
 
 func (p *ProductProducer) ProductUpdatedWithData(ctx context.Context, product *domain.Product) error {
@@ -67,7 +66,7 @@ func (p *ProductProducer) ProductUpdatedWithData(ctx context.Context, product *d
 		Images:       imageURLs(product),
 		UpdatedAt:    product.UpdatedAt,
 	}
-	return p.emit(ctx, kafka.TopicProductUpdated, product.ID.Hex(), payload, "product updated")
+	return p.emitAsync(ctx, kafka.TopicProductUpdated, product.ID.Hex(), payload, "product updated")
 }
 
 func (p *ProductProducer) ProductDeleted(ctx context.Context, productID, slug string) error {
@@ -79,22 +78,15 @@ func (p *ProductProducer) ProductDeleted(ctx context.Context, productID, slug st
 		ProductID: productID,
 		Slug:      slug,
 	}
-	return p.emit(ctx, kafka.TopicProductDeleted, productID, payload, "product deleted")
+	return p.emitAsync(ctx, kafka.TopicProductDeleted, productID, payload, "product deleted")
 }
 
-func (p *ProductProducer) emit(ctx context.Context, topic, key string, payload interface{}, eventName string) error {
-	if err := p.producer.Emit(ctx, topic, &kafka.ProducerMessage{
+func (p *ProductProducer) emitAsync(ctx context.Context, topic, key string, payload interface{}, eventName string) error {
+	p.producer.EmitAsync(ctx, topic, &kafka.ProducerMessage{
 		Key:   key,
 		Value: payload,
-	}); err != nil {
-		logger.FromContext(ctx).Error("failed to publish "+eventName+" event", err,
-			logging.String("productId", key),
-		)
-		return fmt.Errorf("failed to publish %s event: %w", eventName, err)
-	}
-	logger.FromContext(ctx).Debug("published "+eventName+" event",
-		logging.String("productId", key),
-	)
+	})
+	logger.Debug(ctx, "published "+eventName+" event", logging.String("productId", key))
 	return nil
 }
 

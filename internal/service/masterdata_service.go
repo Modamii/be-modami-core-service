@@ -20,7 +20,6 @@ func NewMasterdataService(cats port.CategoryRepository, tags port.HashtagReposit
 	return &MasterdataService{categories: cats, hashtags: tags}
 }
 
-// domain.Category methods
 func (s *MasterdataService) ListCategories(ctx context.Context) ([]domain.Category, error) {
 	return s.categories.ListAll(ctx, true)
 }
@@ -110,7 +109,6 @@ func (s *MasterdataService) ListAllCategories(ctx context.Context) ([]domain.Cat
 	return s.categories.ListAll(ctx, false)
 }
 
-// domain.Hashtag methods
 func (s *MasterdataService) TrendingHashtags(ctx context.Context, limit int) ([]domain.Hashtag, error) {
 	if limit <= 0 {
 		limit = 20

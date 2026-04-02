@@ -144,15 +144,9 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể cập nhật sản phẩm ở trạng thái nháp hoặc đã lưu trữ")
 	}
 
+	req.ApplyTo(p)
 	if req.Title != nil {
-		p.Title = *req.Title
-		p.Slug = utils.GenerateSlug(*req.Title)
-	}
-	if req.Description != nil {
-		p.Description = *req.Description
-	}
-	if req.Price != nil {
-		p.Price = *req.Price
+		p.Slug = utils.GenerateSlug(p.Title)
 	}
 	if req.CategoryID != nil {
 		catID, err := bson.ObjectIDFromHex(*req.CategoryID)
@@ -165,34 +159,6 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		}
 		p.Category = cat
 	}
-	if req.Condition != nil {
-		p.Condition = *req.Condition
-	}
-	if req.Size != nil {
-		p.Size = *req.Size
-	}
-	if req.Brand != nil {
-		p.Brand = *req.Brand
-	}
-	if req.Color != nil {
-		p.Color = *req.Color
-	}
-	if req.Material != nil {
-		p.Material = *req.Material
-	}
-	if req.Images != nil {
-		images := make([]domain.ProductImage, len(req.Images))
-		for i, img := range req.Images {
-			images[i] = domain.ProductImage{URL: img.URL, Position: img.Position, Width: img.Width, Height: img.Height}
-		}
-		p.Images = images
-	}
-	if req.Hashtags != nil {
-		p.Hashtags = req.Hashtags
-	}
-	if req.CreditCost != nil {
-		p.CreditCost = *req.CreditCost
-	}
 
 	if err := s.repo.Update(ctx, p); err != nil {
 		if err == domain.ErrProductVersionConflict {
@@ -200,12 +166,10 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		}
 		return nil, apperror.New(apperror.CodeInternal, "cập nhật sản phẩm thất bại")
 	}
-	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
 	if s.productProducer != nil {
 		if err := s.productProducer.ProductUpdatedWithData(ctx, p); err != nil {
-			logger.FromContext(ctx).Error("failed to publish product updated event with data", err,
-				logging.String("productId", p.ID.Hex()),
-			)
+			logger.Error(ctx, "failed to publish product updated event with data", err,
+				logging.String("productId", p.ID.Hex()))
 		}
 	}
 	return p, nil
@@ -222,7 +186,6 @@ func (s *ProductService) Delete(ctx context.Context, id string, sellerID string)
 	if err := s.repo.SoftDelete(ctx, p.ID); err != nil {
 		return apperror.New(apperror.CodeInternal, "xóa sản phẩm thất bại")
 	}
-	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
 	if s.productProducer != nil {
 		if err := s.productProducer.ProductDeleted(ctx, p.ID.Hex(), p.Slug); err != nil {
 			logger.FromContext(ctx).Error("failed to publish product deleted event", err,
@@ -277,16 +240,9 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 		return nil, apperror.New(apperror.CodeBadRequest, "chỉ có thể gửi lại sản phẩm bị từ chối (trạng thái nháp)")
 	}
 
-	// Apply updates
+	req.ApplyTo(p)
 	if req.Title != nil {
-		p.Title = *req.Title
-		p.Slug = utils.GenerateSlug(*req.Title)
-	}
-	if req.Description != nil {
-		p.Description = *req.Description
-	}
-	if req.Price != nil {
-		p.Price = *req.Price
+		p.Slug = utils.GenerateSlug(p.Title)
 	}
 	if req.CategoryID != nil {
 		catID, err := bson.ObjectIDFromHex(*req.CategoryID)
@@ -298,31 +254,6 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 			return nil, apperror.New(apperror.CodeBadRequest, "không tìm thấy danh mục")
 		}
 		p.Category = cat
-	}
-	if req.Condition != nil {
-		p.Condition = *req.Condition
-	}
-	if req.Size != nil {
-		p.Size = *req.Size
-	}
-	if req.Brand != nil {
-		p.Brand = *req.Brand
-	}
-	if req.Color != nil {
-		p.Color = *req.Color
-	}
-	if req.Material != nil {
-		p.Material = *req.Material
-	}
-	if req.Images != nil {
-		images := make([]domain.ProductImage, len(req.Images))
-		for i, img := range req.Images {
-			images[i] = domain.ProductImage{URL: img.URL, Position: img.Position, Width: img.Width, Height: img.Height}
-		}
-		p.Images = images
-	}
-	if req.Hashtags != nil {
-		p.Hashtags = req.Hashtags
 	}
 
 	p.Status = domain.StatusPending
@@ -629,14 +560,4 @@ func buildProductDetail(p *domain.Product, stats *domain.ProductStats) *domain.P
 		summary.TotalComment = stats.CommentCount
 	}
 	return &domain.ProductDetail{Product: p, Stats: summary}
-}
-
-func (s *ProductService) invalidateProductCache(ctx context.Context, id, slug string) {
-	if s.redisCache == nil {
-		return
-	}
-	_ = s.redisCache.Delete(ctx,
-		fmt.Sprintf(productCacheByID, id),
-		fmt.Sprintf(productCacheBySlug, slug),
-	)
 }
