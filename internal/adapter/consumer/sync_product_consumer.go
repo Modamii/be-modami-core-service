@@ -137,7 +137,7 @@ func buildProductDocument(product *domain.Product) *elasticsearch.ProductDocumen
 		CategoryID:   catID,
 		CategoryName: catName,
 		Status:       string(product.Status),
-		SellerID:     product.SellerID.Hex(),
+		SellerID:     product.SellerID,
 		Images:       images,
 		Hashtags:     product.Hashtags,
 		IsVerified:   product.IsVerified,

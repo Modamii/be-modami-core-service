@@ -153,7 +153,7 @@ Moi endpoint ben duoi gom: auth, input (path/query/body), output, error codes, v
 
 ## Admin APIs
 
-### `POST /admin/categories`
+### `POST /categories`
 
 - **Summary**: Admin: create category
 - **Auth required**: `yes`
@@ -179,7 +179,7 @@ Moi endpoint ben duoi gom: auth, input (path/query/body), output, error codes, v
 **cURL sample**
 
 ```bash
-curl -X POST '{SCHEME}://{HOST}/v1/core-services/admin/categories' \
+curl -X POST '{SCHEME}://{HOST}/v1/core-services/categories' \
   -H 'Authorization: Bearer {TOKEN}' \
   -H 'Content-Type: application/json' \
   -d '{"TODO":"fill_body_based_on_schema"}'
@@ -191,7 +191,7 @@ curl -X POST '{SCHEME}://{HOST}/v1/core-services/admin/categories' \
 - Luon parse theo envelope `success/data/meta` hoac `success/error/meta`.
 - Xu ly status code theo bang mapping muc `1)`; khong hard-code message server.
 
-### `PUT /admin/categories/reorder`
+### `PUT /categories/reorder`
 
 - **Summary**: Admin: reorder categories
 - **Auth required**: `yes`
@@ -217,7 +217,7 @@ curl -X POST '{SCHEME}://{HOST}/v1/core-services/admin/categories' \
 **cURL sample**
 
 ```bash
-curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/reorder' \
+curl -X PUT '{SCHEME}://{HOST}/v1/core-services/categories/reorder' \
   -H 'Authorization: Bearer {TOKEN}' \
   -H 'Content-Type: application/json' \
   -d '{"TODO":"fill_body_based_on_schema"}'
@@ -229,7 +229,7 @@ curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/reorder' \
 - Luon parse theo envelope `success/data/meta` hoac `success/error/meta`.
 - Xu ly status code theo bang mapping muc `1)`; khong hard-code message server.
 
-### `PUT /admin/categories/{id}`
+### `PUT /categories/{id}`
 
 - **Summary**: Admin: update category
 - **Auth required**: `yes`
@@ -257,7 +257,7 @@ curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/reorder' \
 **cURL sample**
 
 ```bash
-curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
+curl -X PUT '{SCHEME}://{HOST}/v1/core-services/categories/{id}' \
   -H 'Authorization: Bearer {TOKEN}' \
   -H 'Content-Type: application/json' \
   -d '{"TODO":"fill_body_based_on_schema"}'
@@ -269,7 +269,7 @@ curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
 - Luon parse theo envelope `success/data/meta` hoac `success/error/meta`.
 - Xu ly status code theo bang mapping muc `1)`; khong hard-code message server.
 
-### `DELETE /admin/categories/{id}`
+### `DELETE /categories/{id}`
 
 - **Summary**: Admin: delete category
 - **Auth required**: `yes`
@@ -294,7 +294,7 @@ curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
 **cURL sample**
 
 ```bash
-curl -X DELETE '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
+curl -X DELETE '{SCHEME}://{HOST}/v1/core-services/categories/{id}' \
   -H 'Authorization: Bearer {TOKEN}'
 ```
 
@@ -304,7 +304,7 @@ curl -X DELETE '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
 - Luon parse theo envelope `success/data/meta` hoac `success/error/meta`.
 - Xu ly status code theo bang mapping muc `1)`; khong hard-code message server.
 
-### `PUT /admin/categories/{id}/toggle`
+### `PUT /categories/{id}/toggle`
 
 - **Summary**: Admin: toggle category active
 - **Auth required**: `yes`
@@ -329,7 +329,7 @@ curl -X DELETE '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}' \
 **cURL sample**
 
 ```bash
-curl -X PUT '{SCHEME}://{HOST}/v1/core-services/admin/categories/{id}/toggle' \
+curl -X PUT '{SCHEME}://{HOST}/v1/core-services/categories/{id}/toggle' \
   -H 'Authorization: Bearer {TOKEN}'
 ```
 
@@ -1448,7 +1448,7 @@ curl -X GET '{SCHEME}://{HOST}/v1/core-services/health'
 - **Product detail**: `GET /products/{id}` hoac `GET /products/slug/{slug}`, sau do `POST /products/{id}/view`
 - **Seller profile**: `GET /sellers/{id}`, `GET /sellers/{id}/products`, `GET /sellers/{id}/stats`, `GET /sellers/{id}/reviews`
 - **My products**: `GET /products/me`, `POST /products`, `PUT /products/{id}`, `POST /products/{id}/submit`, `POST /products/{id}/resubmit`, `POST /products/{id}/archive`, `POST /products/{id}/unarchive`
-- **Admin category**: `/admin/categories*` nhom endpoint CRUD/reorder/toggle
+- **Admin category**: `/categories*` nhom endpoint CRUD/reorder/toggle
 
 ## 5) TypeScript Starter Types (FE copy nhanh)
 

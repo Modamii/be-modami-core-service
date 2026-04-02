@@ -23,7 +23,7 @@ type ProductRepository interface {
 	Update(ctx context.Context, p *domain.Product) error
 	SoftDelete(ctx context.Context, id bson.ObjectID) error
 
-	ListBySellerID(ctx context.Context, sellerID bson.ObjectID, status string, cursor string, limit int) ([]domain.Product, string, error)
+	ListBySellerID(ctx context.Context, sellerID string, status string, cursor string, limit int) ([]domain.Product, string, error)
 	ListFeed(ctx context.Context, cursor string, limit int) ([]domain.Product, string, error)
 	ListFeatured(ctx context.Context, cursor string, limit int) ([]domain.Product, string, error)
 	ListSelect(ctx context.Context, cursor string, limit int) ([]domain.Product, string, error)

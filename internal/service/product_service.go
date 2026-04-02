@@ -47,11 +47,6 @@ func NewProductService(
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.CreateProductRequest) (*domain.Product, error) {
-	sid, err := bson.ObjectIDFromHex(sellerID)
-	if err != nil {
-		return nil, apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
-	}
-
 	catID, err := bson.ObjectIDFromHex(req.CategoryID)
 	if err != nil {
 		return nil, apperror.New(apperror.CodeBadRequest, "category_id không hợp lệ")
@@ -72,7 +67,7 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 	}
 
 	p := &domain.Product{
-		SellerID:    sid,
+		SellerID:    sellerID,
 		Status:      domain.StatusDraft,
 		Title:       req.Title,
 		Slug:        utils.GenerateSlug(req.Title),
@@ -137,7 +132,7 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 	if err != nil {
 		return nil, err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể cập nhật sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft && p.Status != domain.StatusArchived {
@@ -180,7 +175,7 @@ func (s *ProductService) Delete(ctx context.Context, id string, sellerID string)
 	if err != nil {
 		return err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return apperror.New(apperror.CodeForbidden, "bạn chỉ có thể xóa sản phẩm của mình")
 	}
 	if err := s.repo.SoftDelete(ctx, p.ID); err != nil {
@@ -201,7 +196,7 @@ func (s *ProductService) Submit(ctx context.Context, id string, sellerID string)
 	if err != nil {
 		return nil, err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể gửi duyệt sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
@@ -233,7 +228,7 @@ func (s *ProductService) Resubmit(ctx context.Context, id string, sellerID strin
 	if err != nil {
 		return nil, err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể gửi lại sản phẩm của mình")
 	}
 	if p.Status != domain.StatusDraft {
@@ -282,7 +277,7 @@ func (s *ProductService) Archive(ctx context.Context, id string, sellerID string
 	if err != nil {
 		return nil, err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể lưu trữ sản phẩm của mình")
 	}
 	if p.Status != domain.StatusActive {
@@ -300,7 +295,7 @@ func (s *ProductService) Unarchive(ctx context.Context, id string, sellerID stri
 	if err != nil {
 		return nil, err
 	}
-	if p.SellerID.Hex() != sellerID {
+	if p.SellerID != sellerID {
 		return nil, apperror.New(apperror.CodeForbidden, "bạn chỉ có thể khôi phục sản phẩm của mình")
 	}
 	if p.Status != domain.StatusArchived {
@@ -324,19 +319,11 @@ func (s *ProductService) GetModeration(ctx context.Context, id string) ([]domain
 }
 
 func (s *ProductService) MyProducts(ctx context.Context, sellerID string, status string, cursor string, limit int) ([]domain.Product, string, error) {
-	sid, err := bson.ObjectIDFromHex(sellerID)
-	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
-	}
-	return s.repo.ListBySellerID(ctx, sid, status, cursor, limit)
+	return s.repo.ListBySellerID(ctx, sellerID, status, cursor, limit)
 }
 
 func (s *ProductService) SellerProducts(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Product, string, error) {
-	sid, err := bson.ObjectIDFromHex(sellerID)
-	if err != nil {
-		return nil, "", apperror.New(apperror.CodeBadRequest, "seller_id không hợp lệ")
-	}
-	return s.repo.ListBySellerID(ctx, sid, string(domain.StatusActive), cursor, limit)
+	return s.repo.ListBySellerID(ctx, sellerID, string(domain.StatusActive), cursor, limit)
 }
 
 func (s *ProductService) Feed(ctx context.Context, cursor string, limit int) ([]domain.Product, string, error) {
@@ -391,11 +378,10 @@ func (s *ProductService) Approve(ctx context.Context, id string, moderatorID str
 		return nil, apperror.New(apperror.CodeInternal, "failed to approve product")
 	}
 
-	modID, _ := bson.ObjectIDFromHex(moderatorID)
 	_ = s.repo.CreateModeration(ctx, &domain.ProductModeration{
 		ProductID:   p.ID,
 		Action:      "approved",
-		ModeratorID: &modID,
+		ModeratorID: &moderatorID,
 	})
 	return p, nil
 }
@@ -413,14 +399,13 @@ func (s *ProductService) Reject(ctx context.Context, id string, moderatorID stri
 		return nil, apperror.New(apperror.CodeInternal, "failed to reject product")
 	}
 
-	modID, _ := bson.ObjectIDFromHex(moderatorID)
 	_ = s.repo.CreateModeration(ctx, &domain.ProductModeration{
 		ProductID:   p.ID,
 		Action:      "rejected",
 		RejectCode:  rejectCode,
 		Reason:      reason,
 		Suggestion:  suggestion,
-		ModeratorID: &modID,
+		ModeratorID: &moderatorID,
 	})
 	return p, nil
 }

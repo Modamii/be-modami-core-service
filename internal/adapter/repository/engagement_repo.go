@@ -36,12 +36,12 @@ func (r *mongoFavoriteRepo) Add(ctx context.Context, f *domain.Favorite) error {
 	return nil
 }
 
-func (r *mongoFavoriteRepo) Remove(ctx context.Context, userID, productID bson.ObjectID) error {
+func (r *mongoFavoriteRepo) Remove(ctx context.Context, userID string, productID bson.ObjectID) error {
 	_, err := r.col.DeleteOne(ctx, bson.M{"user_id": userID, "product_id": productID})
 	return err
 }
 
-func (r *mongoFavoriteRepo) ListByUser(ctx context.Context, userID bson.ObjectID, cursor string, limit int) ([]domain.Favorite, string, error) {
+func (r *mongoFavoriteRepo) ListByUser(ctx context.Context, userID string, cursor string, limit int) ([]domain.Favorite, string, error) {
 	filter := bson.M{"user_id": userID}
 	if cursor != "" {
 		cf, err := pagination.CursorFilter(cursor, "created_at")
@@ -74,7 +74,7 @@ func (r *mongoFavoriteRepo) ListByUser(ctx context.Context, userID bson.ObjectID
 	return items, nextCursor, nil
 }
 
-func (r *mongoFavoriteRepo) Check(ctx context.Context, userID, productID bson.ObjectID) (bool, error) {
+func (r *mongoFavoriteRepo) Check(ctx context.Context, userID string, productID bson.ObjectID) (bool, error) {
 	count, err := r.col.CountDocuments(ctx, bson.M{"user_id": userID, "product_id": productID})
 	if err != nil {
 		return false, err
@@ -108,12 +108,12 @@ func (r *mongoSavedProductRepo) Save(ctx context.Context, sp *domain.SavedProduc
 	return nil
 }
 
-func (r *mongoSavedProductRepo) Remove(ctx context.Context, userID, productID bson.ObjectID) error {
+func (r *mongoSavedProductRepo) Remove(ctx context.Context, userID string, productID bson.ObjectID) error {
 	_, err := r.col.DeleteOne(ctx, bson.M{"user_id": userID, "product_id": productID})
 	return err
 }
 
-func (r *mongoSavedProductRepo) ListByUser(ctx context.Context, userID bson.ObjectID, cursor string, limit int) ([]domain.SavedProduct, string, error) {
+func (r *mongoSavedProductRepo) ListByUser(ctx context.Context, userID string, cursor string, limit int) ([]domain.SavedProduct, string, error) {
 	filter := bson.M{"user_id": userID}
 	if cursor != "" {
 		cf, err := pagination.CursorFilter(cursor, "created_at")
@@ -146,7 +146,7 @@ func (r *mongoSavedProductRepo) ListByUser(ctx context.Context, userID bson.Obje
 	return items, nextCursor, nil
 }
 
-func (r *mongoSavedProductRepo) Check(ctx context.Context, userID, productID bson.ObjectID) (bool, error) {
+func (r *mongoSavedProductRepo) Check(ctx context.Context, userID string, productID bson.ObjectID) (bool, error) {
 	count, err := r.col.CountDocuments(ctx, bson.M{"user_id": userID, "product_id": productID})
 	if err != nil {
 		return false, err
@@ -154,7 +154,7 @@ func (r *mongoSavedProductRepo) Check(ctx context.Context, userID, productID bso
 	return count > 0, nil
 }
 
-func (r *mongoSavedProductRepo) MoveToCollection(ctx context.Context, userID, productID bson.ObjectID, collectionID *bson.ObjectID) error {
+func (r *mongoSavedProductRepo) MoveToCollection(ctx context.Context, userID string, productID bson.ObjectID, collectionID *bson.ObjectID) error {
 	_, err := r.col.UpdateOne(ctx,
 		bson.M{"user_id": userID, "product_id": productID},
 		bson.M{"$set": bson.M{"collection_id": collectionID}},
@@ -186,7 +186,7 @@ func (r *mongoSavedCollectionRepo) Create(ctx context.Context, sc *domain.SavedC
 	return nil
 }
 
-func (r *mongoSavedCollectionRepo) List(ctx context.Context, userID bson.ObjectID) ([]domain.SavedCollection, error) {
+func (r *mongoSavedCollectionRepo) List(ctx context.Context, userID string) ([]domain.SavedCollection, error) {
 	opts := options.Find().SetSort(bson.D{{"created_at", -1}})
 	cur, err := r.col.Find(ctx, bson.M{"user_id": userID}, opts)
 	if err != nil {
@@ -199,7 +199,7 @@ func (r *mongoSavedCollectionRepo) List(ctx context.Context, userID bson.ObjectI
 	return items, nil
 }
 
-func (r *mongoSavedCollectionRepo) Update(ctx context.Context, id, userID bson.ObjectID, name string) error {
+func (r *mongoSavedCollectionRepo) Update(ctx context.Context, id bson.ObjectID, userID string, name string) error {
 	result, err := r.col.UpdateOne(ctx,
 		bson.M{"_id": id, "user_id": userID},
 		bson.M{"$set": bson.M{"name": name, "updated_at": time.Now()}},
@@ -213,7 +213,7 @@ func (r *mongoSavedCollectionRepo) Update(ctx context.Context, id, userID bson.O
 	return nil
 }
 
-func (r *mongoSavedCollectionRepo) Delete(ctx context.Context, id, userID bson.ObjectID) error {
+func (r *mongoSavedCollectionRepo) Delete(ctx context.Context, id bson.ObjectID, userID string) error {
 	result, err := r.col.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return err
@@ -246,22 +246,22 @@ func (r *mongoFollowRepo) Follow(ctx context.Context, f *domain.Follow) error {
 	return nil
 }
 
-func (r *mongoFollowRepo) Unfollow(ctx context.Context, followerID, sellerID bson.ObjectID) error {
+func (r *mongoFollowRepo) Unfollow(ctx context.Context, followerID, sellerID string) error {
 	_, err := r.col.DeleteOne(ctx, bson.M{"follower_id": followerID, "seller_id": sellerID})
 	return err
 }
 
-func (r *mongoFollowRepo) ListFollowing(ctx context.Context, followerID bson.ObjectID, cursor string, limit int) ([]domain.Follow, string, error) {
+func (r *mongoFollowRepo) ListFollowing(ctx context.Context, followerID string, cursor string, limit int) ([]domain.Follow, string, error) {
 	filter := bson.M{"follower_id": followerID}
 	return r.listWithCursor(ctx, filter, cursor, limit)
 }
 
-func (r *mongoFollowRepo) ListFollowers(ctx context.Context, sellerID bson.ObjectID, cursor string, limit int) ([]domain.Follow, string, error) {
+func (r *mongoFollowRepo) ListFollowers(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Follow, string, error) {
 	filter := bson.M{"seller_id": sellerID}
 	return r.listWithCursor(ctx, filter, cursor, limit)
 }
 
-func (r *mongoFollowRepo) Check(ctx context.Context, followerID, sellerID bson.ObjectID) (bool, error) {
+func (r *mongoFollowRepo) Check(ctx context.Context, followerID, sellerID string) (bool, error) {
 	count, err := r.col.CountDocuments(ctx, bson.M{"follower_id": followerID, "seller_id": sellerID})
 	if err != nil {
 		return false, err
@@ -269,11 +269,11 @@ func (r *mongoFollowRepo) Check(ctx context.Context, followerID, sellerID bson.O
 	return count > 0, nil
 }
 
-func (r *mongoFollowRepo) CountFollowers(ctx context.Context, sellerID bson.ObjectID) (int64, error) {
+func (r *mongoFollowRepo) CountFollowers(ctx context.Context, sellerID string) (int64, error) {
 	return r.col.CountDocuments(ctx, bson.M{"seller_id": sellerID})
 }
 
-func (r *mongoFollowRepo) CountFollowing(ctx context.Context, followerID bson.ObjectID) (int64, error) {
+func (r *mongoFollowRepo) CountFollowing(ctx context.Context, followerID string) (int64, error) {
 	return r.col.CountDocuments(ctx, bson.M{"follower_id": followerID})
 }
 
@@ -333,7 +333,7 @@ func (r *mongoReviewRepo) Create(ctx context.Context, rv *domain.Review) error {
 	return nil
 }
 
-func (r *mongoReviewRepo) ListBySeller(ctx context.Context, sellerID bson.ObjectID, cursor string, limit int) ([]domain.Review, string, error) {
+func (r *mongoReviewRepo) ListBySeller(ctx context.Context, sellerID string, cursor string, limit int) ([]domain.Review, string, error) {
 	filter := bson.M{"seller_id": sellerID}
 	return r.listWithCursor(ctx, filter, cursor, limit)
 }
@@ -343,7 +343,7 @@ func (r *mongoReviewRepo) ListByProduct(ctx context.Context, productID bson.Obje
 	return r.listWithCursor(ctx, filter, cursor, limit)
 }
 
-func (r *mongoReviewRepo) ListByBuyer(ctx context.Context, buyerID bson.ObjectID, cursor string, limit int) ([]domain.Review, string, error) {
+func (r *mongoReviewRepo) ListByBuyer(ctx context.Context, buyerID string, cursor string, limit int) ([]domain.Review, string, error) {
 	filter := bson.M{"buyer_id": buyerID}
 	return r.listWithCursor(ctx, filter, cursor, limit)
 }

@@ -18,7 +18,7 @@ const (
 
 type Product struct {
 	ID       bson.ObjectID `bson:"_id,omitempty" json:"id"`
-	SellerID bson.ObjectID `bson:"seller_id" json:"seller_id"`
+	SellerID string        `bson:"seller_id" json:"seller_id"`
 	Status   ProductStatus `bson:"status" json:"status"`
 	Version  int64         `bson:"version" json:"version"`
 
@@ -27,12 +27,12 @@ type Product struct {
 	Description string `bson:"description" json:"description"`
 	Price       int64  `bson:"price" json:"price"`
 
-	Category *Category `bson:"category" json:"category"`
-	Condition  string        `bson:"condition" json:"condition"`
-	Size       string        `bson:"size" json:"size"`
-	Brand      string        `bson:"brand,omitempty" json:"brand,omitempty"`
-	Color      string        `bson:"color,omitempty" json:"color,omitempty"`
-	Material   string        `bson:"material,omitempty" json:"material,omitempty"`
+	Category  *Category `bson:"category" json:"category"`
+	Condition string    `bson:"condition" json:"condition"`
+	Size      string    `bson:"size" json:"size"`
+	Brand     string    `bson:"brand,omitempty" json:"brand,omitempty"`
+	Color     string    `bson:"color,omitempty" json:"color,omitempty"`
+	Material  string    `bson:"material,omitempty" json:"material,omitempty"`
 
 	Images []ProductImage `bson:"images" json:"images"`
 
@@ -84,16 +84,16 @@ type ProductDetail struct {
 }
 
 type ProductModeration struct {
-	ID          bson.ObjectID  `bson:"_id,omitempty" json:"id"`
-	ProductID   bson.ObjectID  `bson:"product_id" json:"product_id"`
-	Round       int            `bson:"round" json:"round"`
-	Action      string         `bson:"action" json:"action"`
-	RejectCode  string         `bson:"reject_code,omitempty" json:"reject_code,omitempty"`
-	Reason      string         `bson:"reason,omitempty" json:"reason,omitempty"`
-	Note        string         `bson:"note,omitempty" json:"note,omitempty"`
-	Suggestion  string         `bson:"suggestion,omitempty" json:"suggestion,omitempty"`
-	ModeratorID *bson.ObjectID `bson:"moderator_id,omitempty" json:"moderator_id,omitempty"`
-	CreatedAt   time.Time      `bson:"created_at" json:"created_at"`
+	ID          bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	ProductID   bson.ObjectID `bson:"product_id" json:"product_id"`
+	Round       int           `bson:"round" json:"round"`
+	Action      string        `bson:"action" json:"action"`
+	RejectCode  string        `bson:"reject_code,omitempty" json:"reject_code,omitempty"`
+	Reason      string        `bson:"reason,omitempty" json:"reason,omitempty"`
+	Note        string        `bson:"note,omitempty" json:"note,omitempty"`
+	Suggestion  string        `bson:"suggestion,omitempty" json:"suggestion,omitempty"`
+	ModeratorID *string       `bson:"moderator_id,omitempty" json:"moderator_id,omitempty"`
+	CreatedAt   time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type SelectProduct struct {
@@ -103,7 +103,7 @@ type SelectProduct struct {
 	Provenance    string        `bson:"provenance" json:"provenance"`
 	Year          int           `bson:"year,omitempty" json:"year,omitempty"`
 	CertificateID string        `bson:"certificate_id" json:"certificate_id"`
-	VerifiedBy    bson.ObjectID `bson:"verified_by" json:"verified_by"`
+	VerifiedBy    string        `bson:"verified_by" json:"verified_by"`
 	VerifiedAt    time.Time     `bson:"verified_at" json:"verified_at"`
 	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }

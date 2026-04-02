@@ -69,6 +69,25 @@ definitions:
     - slug
     - title
     type: object
+  dto.CreateCategoryRequest:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      name_vi:
+        type: string
+      parent_id:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+    required:
+    - name
+    - name_vi
+    - slug
+    type: object
   dto.CreateProductRequest:
     properties:
       brand:
@@ -228,6 +247,19 @@ definitions:
       word_count:
         type: integer
     type: object
+  dto.UpdateCategoryRequest:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      name_vi:
+        type: string
+      slug:
+        type: string
+      sort_order:
+        type: integer
+    type: object
   dto.UpdateProductRequest:
     properties:
       brand:
@@ -272,25 +304,6 @@ definitions:
         minLength: 5
         type: string
     type: object
-  handler.CreateCategoryRequest:
-    properties:
-      icon:
-        type: string
-      name:
-        type: string
-      name_vi:
-        type: string
-      parent_id:
-        type: string
-      slug:
-        type: string
-      sort_order:
-        type: integer
-    required:
-    - name
-    - name_vi
-    - slug
-    type: object
   handler.StandardErrorEnvelope:
     properties:
       error: {}
@@ -305,20 +318,7 @@ definitions:
       success:
         type: boolean
     type: object
-  handler.UpdateCategoryRequest:
-    properties:
-      icon:
-        type: string
-      name:
-        type: string
-      name_vi:
-        type: string
-      slug:
-        type: string
-      sort_order:
-        type: integer
-    type: object
-host: modami-core.techinsightsworld.com
+host: localhost:8087
 info:
   contact: {}
   description: 'Core service: catalog, orders, master data, and seller APIs for the
@@ -326,343 +326,6 @@ info:
   title: Modami Core Service API
   version: "1.0"
 paths:
-  /admin/blog/posts:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Blog post payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateBlogPostRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: Admin — create blog post
-      tags:
-      - Blog Admin
-  /admin/blog/posts/{id}:
-    delete:
-      parameters:
-      - description: Post ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: Admin — delete blog post
-      tags:
-      - Blog Admin
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Post ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Fields to update
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateBlogPostRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: Admin — update blog post
-      tags:
-      - Blog Admin
-  /admin/blog/posts/{id}/publish:
-    post:
-      parameters:
-      - description: Post ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: Admin — publish blog post
-      tags:
-      - Blog Admin
-  /admin/categories:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Category
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.CreateCategoryRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: 'Admin: create category'
-      tags:
-      - Admin
-  /admin/categories/{id}:
-    delete:
-      parameters:
-      - description: Category ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: 'Admin: delete category'
-      tags:
-      - Admin
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Category ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Fields
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.UpdateCategoryRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: 'Admin: update category'
-      tags:
-      - Admin
-  /admin/categories/{id}/toggle:
-    put:
-      parameters:
-      - description: Category ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.StandardSuccessEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: 'Admin: toggle category active'
-      tags:
-      - Admin
-  /admin/categories/reorder:
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Ordered ids
-        in: body
-        name: body
-        required: true
-        schema:
-          items:
-            $ref: '#/definitions/domain.CategoryOrder'
-          type: array
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.StandardErrorEnvelope'
-      security:
-      - BearerAuth: []
-      summary: 'Admin: reorder categories'
-      tags:
-      - Admin
   /blog/hashtags/{tag}:
     get:
       description: Returns published blog posts that carry the given hashtag.
@@ -722,6 +385,161 @@ paths:
           schema:
             $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: Paginated blog post list
+      tags:
+      - Blog
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Blog post payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBlogPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — create blog post
+      tags:
+      - Blog
+  /blog/posts/{id}:
+    delete:
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — delete blog post
+      tags:
+      - Blog
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBlogPostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — update blog post
+      tags:
+      - Blog
+  /blog/posts/{id}/publish:
+    post:
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Admin — publish blog post
       tags:
       - Blog
   /blog/posts/{slug}:
@@ -793,6 +611,149 @@ paths:
       summary: List categories
       tags:
       - Categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: create category'
+      tags:
+      - Categories
+  /categories/{id}:
+    delete:
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: delete category'
+      tags:
+      - Categories
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: update category'
+      tags:
+      - Categories
+  /categories/{id}/toggle:
+    put:
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.StandardSuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: toggle category active'
+      tags:
+      - Categories
   /categories/{slug}:
     get:
       parameters:
@@ -843,6 +804,43 @@ paths:
           schema:
             $ref: '#/definitions/handler.StandardErrorEnvelope'
       summary: List child categories
+      tags:
+      - Categories
+  /categories/reorder:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Ordered ids
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/domain.CategoryOrder'
+          type: array
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.StandardErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: 'Admin: reorder categories'
       tags:
       - Categories
   /community:

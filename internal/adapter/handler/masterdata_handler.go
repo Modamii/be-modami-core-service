@@ -122,7 +122,7 @@ func (h *MasterdataHandler) SuggestHashtags(c *gin.Context) {
 
 // AdminCreateCategory godoc
 // @Summary Admin: create category
-// @Tags Admin
+// @Tags Categories
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -132,8 +132,8 @@ func (h *MasterdataHandler) SuggestHashtags(c *gin.Context) {
 // @Failure 401 {object} StandardErrorEnvelope
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/categories [post]
-func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
+// @Router /categories [post]
+func (h *MasterdataHandler) CreateCategory(c *gin.Context) {
 	var req dto.CreateCategoryRequest
 	if errs := validator.DecodeAndValidateGin(c, &req); errs != nil {
 		validationResponse(c, errs)
@@ -163,7 +163,7 @@ func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
 
 // AdminUpdateCategory godoc
 // @Summary Admin: update category
-// @Tags Admin
+// @Tags Categories
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -175,8 +175,8 @@ func (h *MasterdataHandler) AdminCreateCategory(c *gin.Context) {
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 404 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/categories/{id} [put]
-func (h *MasterdataHandler) AdminUpdateCategory(c *gin.Context) {
+// @Router /categories/{id} [put]
+func (h *MasterdataHandler) UpdateCategory(c *gin.Context) {
 	id := c.Param("id")
 	cat, err := h.svc.GetCategoryByID(c.Request.Context(), id)
 	if err != nil {
@@ -201,15 +201,15 @@ func (h *MasterdataHandler) AdminUpdateCategory(c *gin.Context) {
 
 // AdminToggleCategory godoc
 // @Summary Admin: toggle category active
-// @Tags Admin
+// @Tags Categories
 // @Security BearerAuth
 // @Param id path string true "Category ID"
 // @Success 200 {object} StandardSuccessEnvelope
 // @Failure 401 {object} StandardErrorEnvelope
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/categories/{id}/toggle [put]
-func (h *MasterdataHandler) AdminToggleCategory(c *gin.Context) {
+// @Router /categories/{id}/toggle [put]
+func (h *MasterdataHandler) ToggleCategory(c *gin.Context) {
 	id := c.Param("id")
 	cat, err := h.svc.ToggleCategory(c.Request.Context(), id)
 	if err != nil {
@@ -221,15 +221,15 @@ func (h *MasterdataHandler) AdminToggleCategory(c *gin.Context) {
 
 // AdminDeleteCategory godoc
 // @Summary Admin: delete category
-// @Tags Admin
+// @Tags Categories
 // @Security BearerAuth
 // @Param id path string true "Category ID"
 // @Success 204 "No Content"
 // @Failure 401 {object} StandardErrorEnvelope
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/categories/{id} [delete]
-func (h *MasterdataHandler) AdminDeleteCategory(c *gin.Context) {
+// @Router /categories/{id} [delete]
+func (h *MasterdataHandler) DeleteCategory(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.DeleteCategory(c.Request.Context(), id); err != nil {
 		handleError(c, err)
@@ -240,7 +240,7 @@ func (h *MasterdataHandler) AdminDeleteCategory(c *gin.Context) {
 
 // AdminReorderCategories godoc
 // @Summary Admin: reorder categories
-// @Tags Admin
+// @Tags Categories
 // @Accept json
 // @Security BearerAuth
 // @Param body body []domain.CategoryOrder true "Ordered ids"
@@ -249,8 +249,8 @@ func (h *MasterdataHandler) AdminDeleteCategory(c *gin.Context) {
 // @Failure 401 {object} StandardErrorEnvelope
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/categories/reorder [put]
-func (h *MasterdataHandler) AdminReorderCategories(c *gin.Context) {
+// @Router /categories/reorder [put]
+func (h *MasterdataHandler) ReorderCategories(c *gin.Context) {
 	var orders []domain.CategoryOrder
 	if errs := validator.DecodeAndValidateGin(c, &orders); errs != nil {
 		validationResponse(c, errs)

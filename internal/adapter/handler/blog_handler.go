@@ -136,7 +136,7 @@ func (h *BlogHandler) HashtagPosts(c *gin.Context) {
 
 // AdminCreatePost godoc
 // @Summary Admin — create blog post
-// @Tags Blog Admin
+// @Tags Blog
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -146,8 +146,8 @@ func (h *BlogHandler) HashtagPosts(c *gin.Context) {
 // @Failure 401 {object} StandardErrorEnvelope
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/blog/posts [post]
-func (h *BlogHandler) AdminCreatePost(c *gin.Context) {
+// @Router /blog/posts [post]
+func (h *BlogHandler) CreatePost(c *gin.Context) {
 	var req dto.CreateBlogPostRequest
 	if errs := validator.DecodeAndValidateGin(c, &req); errs != nil {
 		validationResponse(c, errs)
@@ -163,7 +163,7 @@ func (h *BlogHandler) AdminCreatePost(c *gin.Context) {
 
 // AdminUpdatePost godoc
 // @Summary Admin — update blog post
-// @Tags Blog Admin
+// @Tags Blog
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -175,8 +175,8 @@ func (h *BlogHandler) AdminCreatePost(c *gin.Context) {
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 404 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/blog/posts/{id} [put]
-func (h *BlogHandler) AdminUpdatePost(c *gin.Context) {
+// @Router /blog/posts/{id} [put]
+func (h *BlogHandler) UpdatePost(c *gin.Context) {
 	var req dto.UpdateBlogPostRequest
 	if errs := validator.DecodeAndValidateGin(c, &req); errs != nil {
 		validationResponse(c, errs)
@@ -193,7 +193,7 @@ func (h *BlogHandler) AdminUpdatePost(c *gin.Context) {
 
 // AdminDeletePost godoc
 // @Summary Admin — delete blog post
-// @Tags Blog Admin
+// @Tags Blog
 // @Security BearerAuth
 // @Param id path string true "Post ID"
 // @Success 204 "No Content"
@@ -201,8 +201,8 @@ func (h *BlogHandler) AdminUpdatePost(c *gin.Context) {
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 404 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/blog/posts/{id} [delete]
-func (h *BlogHandler) AdminDeletePost(c *gin.Context) {
+// @Router /blog/posts/{id} [delete]
+func (h *BlogHandler) DeletePost(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.DeletePost(c.Request.Context(), id); err != nil {
 		handleError(c, err)
@@ -213,7 +213,7 @@ func (h *BlogHandler) AdminDeletePost(c *gin.Context) {
 
 // AdminPublishPost godoc
 // @Summary Admin — publish blog post
-// @Tags Blog Admin
+// @Tags Blog
 // @Security BearerAuth
 // @Param id path string true "Post ID"
 // @Success 200 {object} StandardSuccessEnvelope
@@ -222,8 +222,8 @@ func (h *BlogHandler) AdminDeletePost(c *gin.Context) {
 // @Failure 403 {object} StandardErrorEnvelope
 // @Failure 404 {object} StandardErrorEnvelope
 // @Failure 500 {object} StandardErrorEnvelope
-// @Router /admin/blog/posts/{id}/publish [post]
-func (h *BlogHandler) AdminPublishPost(c *gin.Context) {
+// @Router /blog/posts/{id}/publish [post]
+func (h *BlogHandler) PublishPost(c *gin.Context) {
 	id := c.Param("id")
 	p, err := h.svc.PublishPost(c.Request.Context(), id)
 	if err != nil {

@@ -91,7 +91,7 @@ func (r *productMongoRepository) SoftDelete(ctx context.Context, id bson.ObjectI
 	return err
 }
 
-func (r *productMongoRepository) ListBySellerID(ctx context.Context, sellerID bson.ObjectID, status string, cursor string, limit int) ([]domain.Product, string, error) {
+func (r *productMongoRepository) ListBySellerID(ctx context.Context, sellerID string, status string, cursor string, limit int) ([]domain.Product, string, error) {
 	filter := bson.M{"seller_id": sellerID, "deleted_at": nil}
 	if status != "" {
 		filter["status"] = status

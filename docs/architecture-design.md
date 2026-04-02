@@ -878,75 +878,75 @@ GET    /api/v1/hashtags/suggest?q=               # Autocomplete
 ### 4.14. Admin — Product Moderation (9)
 
 ```
-GET    /api/v1/admin/products/pending            # Queue duyệt
-GET    /api/v1/admin/products/:id                # Chi tiết (admin view)
-POST   /api/v1/admin/products/:id/approve        # Duyệt
-POST   /api/v1/admin/products/:id/reject         # Từ chối
-PUT    /api/v1/admin/products/:id/feature        # Đánh dấu nổi bật
-PUT    /api/v1/admin/products/:id/unfeature      # Bỏ nổi bật
-PUT    /api/v1/admin/products/:id/verify         # Xác thực
-POST   /api/v1/admin/products/:id/select         # Đưa vào Select
-DELETE /api/v1/admin/products/:id                # Hard delete
+GET    /api/v1/products/pending            # Queue duyệt
+GET    /api/v1/products/:id                # Chi tiết (admin view)
+POST   /api/v1/products/:id/approve        # Duyệt
+POST   /api/v1/products/:id/reject         # Từ chối
+PUT    /api/v1/products/:id/feature        # Đánh dấu nổi bật
+PUT    /api/v1/products/:id/unfeature      # Bỏ nổi bật
+PUT    /api/v1/products/:id/verify         # Xác thực
+POST   /api/v1/products/:id/select         # Đưa vào Select
+DELETE /api/v1/products/:id                # Hard delete
 ```
 
 ### 4.15. Admin — Orders (4)
 
 ```
-GET    /api/v1/admin/orders                      # Tất cả đơn
-GET    /api/v1/admin/orders/:id                  # Chi tiết
-PUT    /api/v1/admin/orders/:id/force-cancel     # Force huỷ
-PUT    /api/v1/admin/orders/:id/force-complete   # Force hoàn thành
+GET    /api/v1/orders                      # Tất cả đơn
+GET    /api/v1/orders/:id                  # Chi tiết
+PUT    /api/v1/orders/:id/force-cancel     # Force huỷ
+PUT    /api/v1/orders/:id/force-complete   # Force hoàn thành
 ```
 
 ### 4.16. Admin — Categories (5)
 
 ```
-POST   /api/v1/admin/categories                  # Tạo
-PUT    /api/v1/admin/categories/:id              # Update
-PUT    /api/v1/admin/categories/:id/toggle       # Bật/tắt
-DELETE /api/v1/admin/categories/:id              # Xóa
-PUT    /api/v1/admin/categories/reorder          # Sắp xếp
+POST   /api/v1/categories                  # Tạo
+PUT    /api/v1/categories/:id              # Update
+PUT    /api/v1/categories/:id/toggle       # Bật/tắt
+DELETE /api/v1/categories/:id              # Xóa
+PUT    /api/v1/categories/reorder          # Sắp xếp
 ```
 
 ### 4.17. Admin — Packages (3)
 
 ```
-POST   /api/v1/admin/packages                    # Tạo
-PUT    /api/v1/admin/packages/:id                # Update
-PUT    /api/v1/admin/packages/:id/toggle         # Bật/tắt
+POST   /api/v1/packages                    # Tạo
+PUT    /api/v1/packages/:id                # Update
+PUT    /api/v1/packages/:id/toggle         # Bật/tắt
 ```
 
 ### 4.18. Admin — Reports (4)
 
 ```
-GET    /api/v1/admin/reports                     # Danh sách
-GET    /api/v1/admin/reports/:id                 # Chi tiết
-PUT    /api/v1/admin/reports/:id/resolve         # Xử lý
-PUT    /api/v1/admin/reports/:id/dismiss         # Bỏ qua
+GET    /api/v1/reports                     # Danh sách
+GET    /api/v1/reports/:id                 # Chi tiết
+PUT    /api/v1/reports/:id/resolve         # Xử lý
+PUT    /api/v1/reports/:id/dismiss         # Bỏ qua
 ```
 
 ### 4.19. Admin — Sellers (5)
 
 ```
-GET    /api/v1/admin/sellers                     # Danh sách
-GET    /api/v1/admin/sellers/:id                 # Chi tiết
-PUT    /api/v1/admin/sellers/:id/ban             # Ban
-PUT    /api/v1/admin/sellers/:id/unban           # Unban
-GET    /api/v1/admin/subscriptions               # Tất cả subscriptions
-GET    /api/v1/admin/credits/transactions        # Tất cả credit tx
+GET    /api/v1/sellers                     # Danh sách
+GET    /api/v1/sellers/:id                 # Chi tiết
+PUT    /api/v1/sellers/:id/ban             # Ban
+PUT    /api/v1/sellers/:id/unban           # Unban
+GET    /api/v1/subscriptions               # Tất cả subscriptions
+GET    /api/v1/credits/transactions        # Tất cả credit tx
 ```
 
 ### 4.20. Admin — Dashboard (8)
 
 ```
-GET    /api/v1/admin/dashboard/overview          # Tổng quan hôm nay
-GET    /api/v1/admin/dashboard/stats             # Stats theo date range
-GET    /api/v1/admin/dashboard/revenue           # Revenue breakdown
-GET    /api/v1/admin/dashboard/products          # Product stats
-GET    /api/v1/admin/dashboard/categories        # Top categories
-GET    /api/v1/admin/dashboard/top-sellers       # Top sellers
-GET    /api/v1/admin/dashboard/subscriptions     # Subscription metrics
-GET    /api/v1/admin/dashboard/moderation        # Moderation stats
+GET    /api/v1/dashboard/overview          # Tổng quan hôm nay
+GET    /api/v1/dashboard/stats             # Stats theo date range
+GET    /api/v1/dashboard/revenue           # Revenue breakdown
+GET    /api/v1/dashboard/products          # Product stats
+GET    /api/v1/dashboard/categories        # Top categories
+GET    /api/v1/dashboard/top-sellers       # Top sellers
+GET    /api/v1/dashboard/subscriptions     # Subscription metrics
+GET    /api/v1/dashboard/moderation        # Moderation stats
 ```
 
 ---

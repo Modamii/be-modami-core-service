@@ -230,7 +230,7 @@ func buildProductDocument(p *domain.Product) *es.ProductDocument {
 		CategoryID:   categoryID,
 		CategoryName: categoryName,
 		Status:       string(p.Status),
-		SellerID:     p.SellerID.Hex(),
+		SellerID:     p.SellerID,
 		Images:       images,
 		Hashtags:     p.Hashtags,
 		IsVerified:   p.IsVerified,

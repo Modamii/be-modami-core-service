@@ -11,8 +11,8 @@ import (
 	"be-modami-core-service/internal/adapter/consumer"
 	"be-modami-core-service/internal/adapter/handler"
 	hmw "be-modami-core-service/internal/adapter/handler/middleware"
-	"be-modami-core-service/internal/adapter/repository"
 	"be-modami-core-service/internal/adapter/producer"
+	"be-modami-core-service/internal/adapter/repository"
 	"be-modami-core-service/internal/port"
 	"be-modami-core-service/internal/service"
 	kafkapkg "be-modami-core-service/pkg/kafka"
@@ -155,22 +155,17 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 		protected.POST("/products/:id/resubmit", productH.Resubmit)
 		protected.POST("/products/:id/archive", productH.Archive)
 		protected.POST("/products/:id/unarchive", productH.Unarchive)
-	}
 
-	admin := v1.Group("/admin")
-	admin.Use(auth.Required())
-	{
-		admin.POST("/categories", hmw.RequirePermission("category.create"), masterdataH.AdminCreateCategory)
-		admin.PUT("/categories/:id", hmw.RequirePermission("category.update"), masterdataH.AdminUpdateCategory)
-		admin.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.AdminToggleCategory)
-		admin.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.AdminDeleteCategory)
-		admin.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.AdminReorderCategories)
+		protected.POST("/categories", hmw.RequirePermission("category.create"), masterdataH.CreateCategory)
+		protected.PUT("/categories/:id", hmw.RequirePermission("category.update"), masterdataH.UpdateCategory)
+		protected.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.ToggleCategory)
+		protected.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.DeleteCategory)
+		protected.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.ReorderCategories)
 
-		// Community & Blog — admin routes
-		admin.POST("/blog/posts", hmw.RequirePermission("blog.create"), blogH.AdminCreatePost)
-		admin.PUT("/blog/posts/:id", hmw.RequirePermission("blog.update"), blogH.AdminUpdatePost)
-		admin.DELETE("/blog/posts/:id", hmw.RequirePermission("blog.delete"), blogH.AdminDeletePost)
-		admin.POST("/blog/posts/:id/publish", hmw.RequirePermission("blog.publish"), blogH.AdminPublishPost)
+		protected.POST("/blog/posts", hmw.RequirePermission("blog.create"), blogH.CreatePost)
+		protected.PUT("/blog/posts/:id", hmw.RequirePermission("blog.update"), blogH.UpdatePost)
+		protected.DELETE("/blog/posts/:id", hmw.RequirePermission("blog.delete"), blogH.DeletePost)
+		protected.POST("/blog/posts/:id/publish", hmw.RequirePermission("blog.publish"), blogH.PublishPost)
 	}
 
 	serviceName := strings.TrimSpace(cfg.Observability.ServiceName)
@@ -210,8 +205,8 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 && conns.Elasticsearch != nil {
 		ks, err := kafkapkg.NewKafkaService(&kafkapkg.KafkaConfig{
 			Brokers:         cfg.Kafka.Brokers(),
-			ClientID:        cfg.Kafka.ClientID + "-sync-consumer",
-			ConsumerGroupID: cfg.Kafka.ConsumerGroup + "-sync",
+			ClientID:        cfg.Kafka.ClientID,
+			ConsumerGroupID: cfg.Kafka.ConsumerGroup,
 		}, cfg.Kafka.Env)
 		if err == nil {
 			syncConsumer := consumer.NewSyncProductConsumer(conns.Elasticsearch, productRepo)
