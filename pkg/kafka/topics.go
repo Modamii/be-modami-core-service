@@ -9,6 +9,10 @@ const (
 	// Produced: events published by user-service
 	TopicUserEvents    = "modami.user.events"     // all user service domain events
 	TopicUserEventsDLQ = "modami.user.events.dlq" // dead letter queue
+
+	// Produced: events published by core-service
+	TopicProductCreated    = "modami.product.created"
+	TopicProductCreatedDLQ = "modami.product.created.dlq"
 )
 
 // GetTopicWithEnv returns the fully-qualified topic name.
@@ -27,5 +31,7 @@ func GetAllTopics(env string) []string {
 		GetTopicWithEnv(env, TopicAuthUserUpdated),
 		GetTopicWithEnv(env, TopicUserEvents),
 		GetTopicWithEnv(env, TopicUserEventsDLQ),
+		GetTopicWithEnv(env, TopicProductCreated),
+		GetTopicWithEnv(env, TopicProductCreatedDLQ),
 	}
 }

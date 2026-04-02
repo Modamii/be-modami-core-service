@@ -10,11 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/modami/core-service/config"
 	_ "github.com/modami/core-service/docs" // swagger generated
+	"github.com/modami/core-service/internal/adapter/consumer"
 	"github.com/modami/core-service/internal/adapter/handler"
 	hmw "github.com/modami/core-service/internal/adapter/handler/middleware"
 	"github.com/modami/core-service/internal/adapter/repository"
 	"github.com/modami/core-service/internal/service"
+	kafkapkg "github.com/modami/core-service/pkg/kafka"
 	"github.com/modami/core-service/pkg/storage/database/mongodb"
+	redisstorage "github.com/modami/core-service/pkg/storage/redis"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
@@ -27,7 +30,6 @@ type Application struct {
 }
 
 func newApplication(ctx context.Context, cfg *config.Config, conns *Connections) (*Application, error) {
-	_ = ctx
 	db := conns.DB
 
 	mongodb.EnsureIndexes(ctx, db)
@@ -42,7 +44,24 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	reviewRepo := repository.NewReviewRepository(db)
 	blogRepo := repository.NewBlogRepository(db)
 
-	productSvc := service.NewProductService(productRepo, categoryRepo)
+	var redisCache redisstorage.RedisCacheService
+	if conns.Redis != nil {
+		redisCache = redisstorage.NewRedisCacheService(conns.Redis)
+	}
+
+	var kafkaProducer kafkapkg.Producer
+	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 {
+		ks, err := kafkapkg.NewKafkaService(&kafkapkg.KafkaConfig{
+			Brokers:          cfg.Kafka.Brokers(),
+			ClientID:         cfg.Kafka.ClientID + "-producer",
+			ProducerOnlyMode: true,
+		}, cfg.Kafka.Env)
+		if err == nil {
+			kafkaProducer = ks
+		}
+	}
+
+	productSvc := service.NewProductService(productRepo, categoryRepo, redisCache, kafkaProducer)
 	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
 	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
 	blogSvc := service.NewBlogService(blogRepo)
@@ -180,6 +199,22 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	}
 
 	logger.Info(context.Background(), "application routes registered", logging.String("addr", addr))
+
+	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 && conns.Elasticsearch != nil {
+		ks, err := kafkapkg.NewKafkaService(&kafkapkg.KafkaConfig{
+			Brokers:         cfg.Kafka.Brokers(),
+			ClientID:        cfg.Kafka.ClientID + "-sync-consumer",
+			ConsumerGroupID: cfg.Kafka.ConsumerGroup + "-sync",
+		}, cfg.Kafka.Env)
+		if err == nil {
+			syncConsumer := consumer.NewSyncProductConsumer(conns.Elasticsearch, productRepo)
+			go func() {
+				if err := ks.StartConsumer(ctx, []kafkapkg.ConsumerHandler{syncConsumer}); err != nil {
+					logger.Error(ctx, "sync consumer stopped", err)
+				}
+			}()
+		}
+	}
 
 	return &Application{HTTPServer: srv}, nil
 }

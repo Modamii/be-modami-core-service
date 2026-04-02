@@ -61,11 +61,26 @@ type ProductImage struct {
 type ProductStats struct {
 	ProductID     bson.ObjectID `bson:"_id" json:"product_id"`
 	ViewCount     int64         `bson:"view_count" json:"view_count"`
+	LikeCount     int64         `bson:"like_count" json:"like_count"`
+	CommentCount  int64         `bson:"comment_count" json:"comment_count"`
 	FavoriteCount int64         `bson:"favorite_count" json:"favorite_count"`
 	SaveCount     int64         `bson:"save_count" json:"save_count"`
 	UnlockCount   int64         `bson:"unlock_count" json:"unlock_count"`
 	ShareCount    int64         `bson:"share_count" json:"share_count"`
 	UpdatedAt     time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+// ProductStatsSummary is the public-facing API stats shape.
+type ProductStatsSummary struct {
+	TotalView    int64 `json:"totalView"`
+	TotalLike    int64 `json:"totalLike"`
+	TotalComment int64 `json:"totalComment"`
+}
+
+// ProductDetail holds a product with its stats, used for detail API responses.
+type ProductDetail struct {
+	Product *Product            `json:"product"`
+	Stats   ProductStatsSummary `json:"stats"`
 }
 
 type ProductModeration struct {

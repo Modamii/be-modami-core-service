@@ -10,18 +10,40 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/modami/core-service/internal/domain"
+	internalevents "github.com/modami/core-service/internal/events"
 	"github.com/modami/core-service/internal/dto"
 	"github.com/modami/core-service/internal/port"
+	"github.com/modami/core-service/pkg/kafka"
+	kafkaevents "github.com/modami/core-service/pkg/kafka/events"
+	redisstorage "github.com/modami/core-service/pkg/storage/redis"
 	apperror "gitlab.com/lifegoeson-libs/pkg-gokit/apperror"
 )
 
+const (
+	productCacheTTL    = 5 * time.Minute
+	productCacheByID   = "product:detail:id:%s"
+	productCacheBySlug = "product:detail:slug:%s"
+)
+
 type ProductService struct {
-	repo     port.ProductRepository
-	catRepo  port.CategoryRepository
+	repo          port.ProductRepository
+	catRepo       port.CategoryRepository
+	redisCache    redisstorage.RedisCacheService
+	kafkaProducer kafka.Producer
 }
 
-func NewProductService(repo port.ProductRepository, catRepo port.CategoryRepository) *ProductService {
-	return &ProductService{repo: repo, catRepo: catRepo}
+func NewProductService(
+	repo port.ProductRepository,
+	catRepo port.CategoryRepository,
+	redisCache redisstorage.RedisCacheService,
+	kafkaProducer kafka.Producer,
+) *ProductService {
+	return &ProductService{
+		repo:          repo,
+		catRepo:       catRepo,
+		redisCache:    redisCache,
+		kafkaProducer: kafkaProducer,
+	}
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.CreateProductRequest) (*domain.Product, error) {
@@ -68,10 +90,46 @@ func (s *ProductService) Create(ctx context.Context, sellerID string, req dto.Cr
 	}
 
 	if err := s.repo.Create(ctx, p); err != nil {
-		return nil, apperror.New(apperror.CodeInternal,"tạo sản phẩm thất bại")
+		return nil, apperror.New(apperror.CodeInternal, "tạo sản phẩm thất bại")
 	}
 
 	_ = s.repo.InitStats(ctx, p.ID)
+
+	if s.kafkaProducer != nil {
+		images := make([]string, 0, len(p.Images))
+		for _, img := range p.Images {
+			images = append(images, img.URL)
+		}
+		var catID, catName string
+		if p.Category != nil {
+			catID = p.Category.ID.Hex()
+			catName = p.Category.Name
+		}
+		payload := &internalevents.ProductCreatedPayload{
+			BaseEventPayload: kafkaevents.BaseEventPayload{
+				Type:      internalevents.EventTypeProductCreated,
+				Timestamp: time.Now(),
+			},
+			ProductID:    p.ID.Hex(),
+			Slug:         p.Slug,
+			Title:        p.Title,
+			SellerID:     p.SellerID.Hex(),
+			CategoryID:   catID,
+			CategoryName: catName,
+			Status:       string(p.Status),
+			Price:        p.Price,
+			Brand:        p.Brand,
+			Condition:    p.Condition,
+			Hashtags:     p.Hashtags,
+			Images:       images,
+			CreatedAt:    p.CreatedAt,
+		}
+		s.kafkaProducer.EmitAsync(ctx, kafka.TopicProductCreated, &kafka.ProducerMessage{
+			Key:   p.ID.Hex(),
+			Value: payload,
+		})
+	}
+
 	return p, nil
 }
 
@@ -169,6 +227,7 @@ func (s *ProductService) Update(ctx context.Context, id string, sellerID string,
 		}
 		return nil, apperror.New(apperror.CodeInternal, "cập nhật sản phẩm thất bại")
 	}
+	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
 	return p, nil
 }
 
@@ -178,11 +237,12 @@ func (s *ProductService) Delete(ctx context.Context, id string, sellerID string)
 		return err
 	}
 	if p.SellerID.Hex() != sellerID {
-		return apperror.New(apperror.CodeForbidden,"bạn chỉ có thể xóa sản phẩm của mình")
+		return apperror.New(apperror.CodeForbidden, "bạn chỉ có thể xóa sản phẩm của mình")
 	}
 	if err := s.repo.SoftDelete(ctx, p.ID); err != nil {
-		return apperror.New(apperror.CodeInternal,"xóa sản phẩm thất bại")
+		return apperror.New(apperror.CodeInternal, "xóa sản phẩm thất bại")
 	}
+	s.invalidateProductCache(ctx, p.ID.Hex(), p.Slug)
 	return nil
 }
 
@@ -515,6 +575,83 @@ func (s *ProductService) ListByIDs(ctx context.Context, ids []bson.ObjectID) ([]
 
 func (s *ProductService) IncrementStat(ctx context.Context, productID bson.ObjectID, field string, value int64) error {
 	return s.repo.IncrementStat(ctx, productID, field, value)
+}
+
+func (s *ProductService) GetDetailByID(ctx context.Context, id string) (*domain.ProductDetail, error) {
+	cacheKey := fmt.Sprintf(productCacheByID, id)
+
+	if s.redisCache != nil {
+		var detail domain.ProductDetail
+		if err := s.redisCache.GetJSON(ctx, cacheKey, &detail); err == nil {
+			return &detail, nil
+		}
+	}
+
+	p, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	oid, _ := bson.ObjectIDFromHex(id)
+	stats, _ := s.repo.GetStats(ctx, oid)
+
+	detail := buildProductDetail(p, stats)
+
+	if s.redisCache != nil {
+		_ = s.redisCache.SetJSON(ctx, cacheKey, detail, productCacheTTL)
+		slugKey := fmt.Sprintf(productCacheBySlug, p.Slug)
+		_ = s.redisCache.SetJSON(ctx, slugKey, detail, productCacheTTL)
+	}
+
+	return detail, nil
+}
+
+func (s *ProductService) GetDetailBySlug(ctx context.Context, slug string) (*domain.ProductDetail, error) {
+	cacheKey := fmt.Sprintf(productCacheBySlug, slug)
+
+	if s.redisCache != nil {
+		var detail domain.ProductDetail
+		if err := s.redisCache.GetJSON(ctx, cacheKey, &detail); err == nil {
+			return &detail, nil
+		}
+	}
+
+	p, err := s.GetBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	stats, _ := s.repo.GetStats(ctx, p.ID)
+
+	detail := buildProductDetail(p, stats)
+
+	if s.redisCache != nil {
+		_ = s.redisCache.SetJSON(ctx, cacheKey, detail, productCacheTTL)
+		idKey := fmt.Sprintf(productCacheByID, p.ID.Hex())
+		_ = s.redisCache.SetJSON(ctx, idKey, detail, productCacheTTL)
+	}
+
+	return detail, nil
+}
+
+func buildProductDetail(p *domain.Product, stats *domain.ProductStats) *domain.ProductDetail {
+	summary := domain.ProductStatsSummary{}
+	if stats != nil {
+		summary.TotalView = stats.ViewCount
+		summary.TotalLike = stats.LikeCount
+		summary.TotalComment = stats.CommentCount
+	}
+	return &domain.ProductDetail{Product: p, Stats: summary}
+}
+
+func (s *ProductService) invalidateProductCache(ctx context.Context, id, slug string) {
+	if s.redisCache == nil {
+		return
+	}
+	_ = s.redisCache.Delete(ctx,
+		fmt.Sprintf(productCacheByID, id),
+		fmt.Sprintf(productCacheBySlug, slug),
+	)
 }
 
 func generateSlug(title string) string {

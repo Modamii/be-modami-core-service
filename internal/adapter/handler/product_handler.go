@@ -60,12 +60,12 @@ func (h *ProductHandler) Create(c *gin.Context) {
 // @Router /products/{id} [get]
 func (h *ProductHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
-	p, err := h.svc.GetByID(c.Request.Context(), id)
+	detail, err := h.svc.GetDetailByID(c.Request.Context(), id)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, p)
+	ok(c, detail)
 }
 
 // GetBySlug godoc
@@ -79,12 +79,12 @@ func (h *ProductHandler) GetByID(c *gin.Context) {
 // @Router /products/slug/{slug} [get]
 func (h *ProductHandler) GetBySlug(c *gin.Context) {
 	slug := c.Param("slug")
-	p, err := h.svc.GetBySlug(c.Request.Context(), slug)
+	detail, err := h.svc.GetDetailBySlug(c.Request.Context(), slug)
 	if err != nil {
 		handleError(c, err)
 		return
 	}
-	ok(c, p)
+	ok(c, detail)
 }
 
 // Update godoc
