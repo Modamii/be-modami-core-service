@@ -12,7 +12,6 @@ type Config struct {
 	App           AppConfig           `mapstructure:"app"`
 	Mongo         MongoConfig         `mapstructure:"mongodb"`
 	Keycloak      KeycloakConfig      `mapstructure:"keycloak"`
-	CORS          CORSConfig          `mapstructure:"cors"`
 	Redis         RedisConfig         `mapstructure:"redis"`
 	Kafka         KafkaConfig         `mapstructure:"kafka"`
 	Elasticsearch ElasticsearchConfig `mapstructure:"elasticsearch"`
@@ -21,17 +20,19 @@ type Config struct {
 
 // AppConfig holds process / HTTP server settings (merged from YAML `app:`).
 type AppConfig struct {
-	Name            string `mapstructure:"name"`
-	Version         string `mapstructure:"version"`
-	Environment     string `mapstructure:"environment"`
-	Debug           bool   `mapstructure:"debug"`
-	Port            int    `mapstructure:"port"`
-	Host            string `mapstructure:"host"`
-	SwaggerHost     string `mapstructure:"swagger_host"`
-	ShutdownTimeout string `mapstructure:"shutdown_timeout"`
-	ReadTimeout     string `mapstructure:"read_timeout"`
-	WriteTimeout    string `mapstructure:"write_timeout"`
-	IdleTimeout     string `mapstructure:"idle_timeout"`
+	Name             string   `mapstructure:"name"`
+	Version          string   `mapstructure:"version"`
+	Environment      string   `mapstructure:"environment"`
+	Debug            bool     `mapstructure:"debug"`
+	Port             int      `mapstructure:"port"`
+	Host             string   `mapstructure:"host"`
+	SwaggerHost      string   `mapstructure:"swagger_host"`
+	ShutdownTimeout  string   `mapstructure:"shutdown_timeout"`
+	ReadTimeout      string   `mapstructure:"read_timeout"`
+	WriteTimeout     string   `mapstructure:"write_timeout"`
+	IdleTimeout      string   `mapstructure:"idle_timeout"`
+	AllowCredentials bool     `mapstructure:"allow_credentials"`
+	AllowedOrigins   []string `mapstructure:"allowed_origins"`
 }
 
 // ListenAddr returns host:port for http.Server (defaults host 0.0.0.0, port 8080).
@@ -95,11 +96,6 @@ type MongoConfig struct {
 
 type KeycloakConfig struct {
 	JWKSUrl string `mapstructure:"jwks_url"`
-}
-
-type CORSConfig struct {
-	AllowedOrigins   []string `mapstructure:"allowed_origins"`
-	AllowCredentials bool     `mapstructure:"allow_credentials"`
 }
 
 type RedisConfig struct {
@@ -174,8 +170,8 @@ func Load() (*Config, error) {
 	v.SetDefault("observability.log_level", "info")
 	v.SetDefault("observability.environment", "development")
 	v.SetDefault("kafka.env", "development")
-	v.SetDefault("cors.allow_credentials", true)
-	v.SetDefault("cors.allowed_origins", []string{
+	v.SetDefault("app.allow_credentials", true)
+	v.SetDefault("app.allowed_origins", []string{
 		"http://localhost:5173",
 		"http://localhost:3000",
 		"http://localhost:8080",
