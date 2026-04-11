@@ -17,9 +17,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"be-modami-core-service/config"
+	"be-modami-core-service/docs"
 
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
@@ -31,6 +31,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
 		os.Exit(1)
 	}
+	docs.SwaggerInfo.Host = cfg.App.SwaggerHost
 
 	serviceName := cfg.Observability.ServiceName
 	if serviceName == "" {
@@ -87,11 +88,7 @@ func main() {
 
 	logger.Info(ctx, "shutting down...")
 
-	shutdownTimeout := cfg.App.ShutdownTimeout
-	if shutdownTimeout == 0 {
-		shutdownTimeout = 30 * time.Second
-	}
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.GetShutdownTimeout())
 	defer cancel()
 	if err := app.HTTPServer.Shutdown(shutdownCtx); err != nil {
 		logger.Error(ctx, "HTTP shutdown error", err)

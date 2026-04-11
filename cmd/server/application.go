@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"time"
 
 	"be-modami-core-service/config"
 	_ "be-modami-core-service/docs" // swagger generated
@@ -193,24 +192,12 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	})
 
 	addr := cfg.App.ListenAddr()
-	readTO := cfg.App.ReadTimeout
-	if readTO == 0 {
-		readTO = 30 * time.Second
-	}
-	writeTO := cfg.App.WriteTimeout
-	if writeTO == 0 {
-		writeTO = 30 * time.Second
-	}
-	idleTO := cfg.App.IdleTimeout
-	if idleTO == 0 {
-		idleTO = 120 * time.Second
-	}
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      httpHandler,
-		ReadTimeout:  readTO,
-		WriteTimeout: writeTO,
-		IdleTimeout:  idleTO,
+		ReadTimeout:  cfg.App.GetReadTimeout(),
+		WriteTimeout: cfg.App.GetWriteTimeout(),
+		IdleTimeout:  cfg.App.GetIdleTimeout(),
 	}
 
 	logger.Info(context.Background(), "application routes registered", logging.String("addr", addr))

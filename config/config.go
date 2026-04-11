@@ -21,27 +21,28 @@ type Config struct {
 
 // AppConfig holds process / HTTP server settings (merged from YAML `app:`).
 type AppConfig struct {
-	Name            string        `mapstructure:"name"`
-	Version         string        `mapstructure:"version"`
-	Environment     string        `mapstructure:"environment"`
-	Debug           bool          `mapstructure:"debug"`
-	Port            int           `mapstructure:"port"`
-	Host            string        `mapstructure:"host"`
-	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
-	ReadTimeout     time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout    time.Duration `mapstructure:"write_timeout"`
-	IdleTimeout     time.Duration `mapstructure:"idle_timeout"`
+	Name            string `mapstructure:"name"`
+	Version         string `mapstructure:"version"`
+	Environment     string `mapstructure:"environment"`
+	Debug           bool   `mapstructure:"debug"`
+	Port            int    `mapstructure:"port"`
+	Host            string `mapstructure:"host"`
+	SwaggerHost     string `mapstructure:"swagger_host"`
+	ShutdownTimeout string `mapstructure:"shutdown_timeout"`
+	ReadTimeout     string `mapstructure:"read_timeout"`
+	WriteTimeout    string `mapstructure:"write_timeout"`
+	IdleTimeout     string `mapstructure:"idle_timeout"`
 }
 
 // ListenAddr returns host:port for http.Server (defaults host 0.0.0.0, port 8080).
 func (a AppConfig) ListenAddr() string {
-	port := a.Port
-	if port <= 0 {
-		port = 8080
-	}
 	host := strings.TrimSpace(a.Host)
 	if host == "" {
 		host = "0.0.0.0"
+	}
+	port := a.Port
+	if port <= 0 {
+		port = 8080
 	}
 	return fmt.Sprintf("%s:%d", host, port)
 }
@@ -53,6 +54,38 @@ func (a AppConfig) PortString() string {
 		p = 8080
 	}
 	return fmt.Sprintf("%d", p)
+}
+
+func (a AppConfig) GetShutdownTimeout() time.Duration {
+	d, err := time.ParseDuration(a.ShutdownTimeout)
+	if err != nil {
+		return 30 * time.Second
+	}
+	return d
+}
+
+func (a AppConfig) GetReadTimeout() time.Duration {
+	d, err := time.ParseDuration(a.ReadTimeout)
+	if err != nil {
+		return 30 * time.Second
+	}
+	return d
+}
+
+func (a AppConfig) GetWriteTimeout() time.Duration {
+	d, err := time.ParseDuration(a.WriteTimeout)
+	if err != nil {
+		return 30 * time.Second
+	}
+	return d
+}
+
+func (a AppConfig) GetIdleTimeout() time.Duration {
+	d, err := time.ParseDuration(a.IdleTimeout)
+	if err != nil {
+		return 120 * time.Second
+	}
+	return d
 }
 
 type MongoConfig struct {
@@ -130,6 +163,7 @@ func Load() (*Config, error) {
 	v.SetDefault("app.debug", true)
 	v.SetDefault("app.port", 8080)
 	v.SetDefault("app.host", "0.0.0.0")
+	v.SetDefault("app.swagger_host", "localhost:8087")
 	v.SetDefault("app.shutdown_timeout", "30s")
 	v.SetDefault("app.read_timeout", "30s")
 	v.SetDefault("app.write_timeout", "30s")
