@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"be-modami-core-service/internal/service"
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 )
 
 type SellerHandler struct {

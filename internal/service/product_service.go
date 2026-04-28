@@ -10,7 +10,7 @@ import (
 	"be-modami-core-service/internal/domain"
 	"be-modami-core-service/internal/dto"
 	"be-modami-core-service/internal/port"
-	redisstorage "be-modami-core-service/pkg/storage/redis"
+	pkgredis "gitlab.com/lifegoeson-libs/pkg-gokit/redis"
 	"be-modami-core-service/pkg/utils"
 
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
@@ -28,14 +28,14 @@ const (
 type ProductService struct {
 	repo            port.ProductRepository
 	catRepo         port.CategoryRepository
-	redisCache      redisstorage.RedisCacheService
+	redisCache      pkgredis.CachePort
 	productProducer port.ProductProducer
 }
 
 func NewProductService(
 	repo port.ProductRepository,
 	catRepo port.CategoryRepository,
-	redisCache redisstorage.RedisCacheService,
+	redisCache pkgredis.CachePort,
 	productProducer port.ProductProducer,
 ) *ProductService {
 	return &ProductService{

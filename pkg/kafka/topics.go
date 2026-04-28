@@ -1,45 +1,35 @@
 package kafka
 
-// Topic names (base, without env prefix — prepend env with GetTopicWithEnv)
+import pkgkafka "gitlab.com/lifegoeson-libs/pkg-gokit/kafka"
+
 const (
-	// Consumed: events produced by auth-service
-	TopicAuthUserCreated = "modami.auth.user.created" // user registered in Keycloak
-	TopicAuthUserUpdated = "modami.auth.user.updated" // user profile updated in Keycloak
-
-	// Produced: events published by user-service
-	TopicUserEvents    = "modami.user.events"     // all user service domain events
-	TopicUserEventsDLQ = "modami.user.events.dlq" // dead letter queue
-
-	// Produced: events published by core-service
-	TopicProductCreated    = "modami.product.created"
-	TopicProductCreatedDLQ = "modami.product.created.dlq"
-	TopicProductUpdated    = "modami.product.updated"
-	TopicProductUpdatedDLQ = "modami.product.updated.dlq"
-	TopicProductDeleted    = "modami.product.deleted"
-	TopicProductDeletedDLQ = "modami.product.deleted.dlq"
+	TopicProductCreated = "product.created"
+	TopicProductUpdated = "product.updated"
+	TopicProductDeleted = "product.deleted"
 )
 
-// GetTopicWithEnv returns the fully-qualified topic name.
-// If env is empty, the base topic name is returned unchanged.
-func GetTopicWithEnv(env, topic string) string {
-	if env == "" {
-		return topic
-	}
-	return env + "." + topic
+// EnvTopicResolver prefixes Kafka topics with an environment string.
+type EnvTopicResolver struct {
+	env    string
+	topics []string
 }
 
-// GetAllTopics returns all topics managed by this service.
-func GetAllTopics(env string) []string {
-	return []string{
-		GetTopicWithEnv(env, TopicAuthUserCreated),
-		GetTopicWithEnv(env, TopicAuthUserUpdated),
-		GetTopicWithEnv(env, TopicUserEvents),
-		GetTopicWithEnv(env, TopicUserEventsDLQ),
-		GetTopicWithEnv(env, TopicProductCreated),
-		GetTopicWithEnv(env, TopicProductCreatedDLQ),
-		GetTopicWithEnv(env, TopicProductUpdated),
-		GetTopicWithEnv(env, TopicProductUpdatedDLQ),
-		GetTopicWithEnv(env, TopicProductDeleted),
-		GetTopicWithEnv(env, TopicProductDeletedDLQ),
+// NewEnvTopicResolver creates a resolver that prefixes all topics with "<env>.".
+func NewEnvTopicResolver(env string, topics ...string) pkgkafka.TopicResolver {
+	return &EnvTopicResolver{env: env, topics: topics}
+}
+
+func (r *EnvTopicResolver) ResolveTopic(baseTopic string) string {
+	if r.env == "" {
+		return baseTopic
 	}
+	return r.env + "." + baseTopic
+}
+
+func (r *EnvTopicResolver) GetAllTopics() []string {
+	resolved := make([]string, len(r.topics))
+	for i, t := range r.topics {
+		resolved[i] = r.ResolveTopic(t)
+	}
+	return resolved
 }

@@ -78,7 +78,7 @@ func (r *mongoCategoryRepo) ListAll(ctx context.Context, activeOnly bool) ([]dom
 	if activeOnly {
 		filter["is_active"] = true
 	}
-	opts := options.Find().SetSort(bson.D{{"sort_order", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}})
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (r *mongoCategoryRepo) ListAll(ctx context.Context, activeOnly bool) ([]dom
 }
 
 func (r *mongoCategoryRepo) ListChildren(ctx context.Context, parentID bson.ObjectID) ([]domain.Category, error) {
-	opts := options.Find().SetSort(bson.D{{"sort_order", 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}})
 	cur, err := r.col.Find(ctx, bson.M{"parent_id": parentID, "is_active": true}, opts)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (r *mongoHashtagRepo) Upsert(ctx context.Context, tag string, delta int64) 
 }
 
 func (r *mongoHashtagRepo) ListTrending(ctx context.Context, limit int) ([]domain.Hashtag, error) {
-	opts := options.Find().SetSort(bson.D{{"usage_count", -1}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{{Key: "usage_count", Value: -1}}).SetLimit(int64(limit))
 	cur, err := r.col.Find(ctx, bson.M{"usage_count": bson.M{"$gt": 0}}, opts)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func (r *mongoHashtagRepo) ListTrending(ctx context.Context, limit int) ([]domai
 
 func (r *mongoHashtagRepo) Search(ctx context.Context, query string, limit int) ([]domain.Hashtag, error) {
 	filter := bson.M{"_id": bson.M{"$regex": query, "$options": "i"}}
-	opts := options.Find().SetSort(bson.D{{"usage_count", -1}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{{Key: "usage_count", Value: -1}}).SetLimit(int64(limit))
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err

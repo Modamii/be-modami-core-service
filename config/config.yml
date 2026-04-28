@@ -21,7 +21,7 @@ keycloak:
   jwks_url: "http://localhost:8180/realms/modami/protocol/openid-connect/certs"
 
 mongodb:
-  uri: "mongodb://localhost:27017/?directConnection=true"
+  uri: "mongodb://localhost:27017"
   database: "modami-core-service"
   timeout: 10s
   max_pool_size: 100

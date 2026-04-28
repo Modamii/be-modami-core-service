@@ -1,171 +1,98 @@
 package elasticsearch
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
+
+	pkges "gitlab.com/lifegoeson-libs/pkg-gokit/elasticsearch"
 )
 
-// EnsureProductIndices creates the language detection ingest pipeline and all
-// language-specific product indices (base + one per SupportedLanguages).
-//
-// Pipeline behaviour (requires the ingest-langdetect ES plugin):
-//  1. Detects language from the `title` field → writes to `language` field.
-//  2. Reroutes the document to `{base}_{language}` via Painless script.
-//     Falls back to the base index when language detection fails.
-func (c *Client) EnsureProductIndices(ctx context.Context) error {
-	if err := c.ensureLangDetectPipeline(ctx); err != nil {
-		return fmt.Errorf("ensure langdetect pipeline: %w", err)
-	}
 
-	// Base (fallback) index — no language suffix
-	if err := c.createProductIndex(ctx, c.Index, ""); err != nil {
-		return fmt.Errorf("create base product index: %w", err)
-	}
+// productMappings defines the Elasticsearch field mappings for product documents.
+var productMappings = map[string]any{
+	"properties": map[string]any{
+		"id":   map[string]any{"type": "keyword"},
+		"slug": map[string]any{"type": "keyword"},
+		"title": map[string]any{
+			"type":     "text",
+			"analyzer": "product_ascii",
+			"fields": map[string]any{
+				"no_ascii": map[string]any{"type": "text", "analyzer": "product_no_ascii"},
+				"raw":      map[string]any{"type": "keyword"},
+			},
+		},
+		"description": map[string]any{
+			"type":     "text",
+			"analyzer": "product_ascii",
+		},
+		"brand":         map[string]any{"type": "keyword"},
+		"condition":     map[string]any{"type": "keyword"},
+		"category_id":   map[string]any{"type": "keyword"},
+		"category_name": map[string]any{"type": "keyword"},
+		"status":        map[string]any{"type": "keyword"},
+		"seller_id":     map[string]any{"type": "keyword"},
+		"hashtags":      map[string]any{"type": "keyword"},
+		"price":         map[string]any{"type": "long"},
+		"is_verified":   map[string]any{"type": "boolean"},
+		"is_featured":   map[string]any{"type": "boolean"},
+		"is_select":     map[string]any{"type": "boolean"},
+		"language":      map[string]any{"type": "keyword"},
+		"images":        map[string]any{"type": "keyword"},
+		"published_at":  map[string]any{"type": "date"},
+		"created_at":    map[string]any{"type": "date"},
+	},
+}
 
-	// Language-specific indices
-	for _, lang := range SupportedLanguages {
-		name := ProductIndexNameForLang(c.Index, lang)
-		if err := c.createProductIndex(ctx, name, lang); err != nil {
-			return fmt.Errorf("create product index %s: %w", name, err)
+// productLangPipeline is the ingest pipeline definition for language-aware routing.
+var productLangPipeline = map[string]any{
+	"description": "Language detection and routing pipeline for products",
+	"processors": []map[string]any{
+		{
+			"inference": map[string]any{
+				"model_id":     "lang_ident_model_1",
+				"field_map":    map[string]any{"title": "text_field"},
+				"target_field": "_ingest._value",
+				"on_failure": []map[string]any{
+					{"set": map[string]any{"field": "language", "value": "vi"}},
+				},
+			},
+		},
+		{
+			"set": map[string]any{
+				"field": "language",
+				"value": "{{_ingest._value.predicted_value}}",
+			},
+		},
+		{
+			"reroute": map[string]any{
+				"dataset": "{{language}}",
+			},
+		},
+	},
+}
+
+// EnsureProductIndices creates the language detection pipeline and all language-specific
+// product indices with proper analyzers and mappings.
+func EnsureProductIndices(ctx context.Context, c *pkges.Client) error {
+	if err := c.EnsurePipeline(ctx, PipelineProductLangIdent, productLangPipeline); err != nil {
+		return fmt.Errorf("ensure product lang pipeline: %w", err)
+	}
+	for _, lang := range pkges.SupportedLanguages {
+		indexName := pkges.IndexNameForLang(c.Index, lang)
+		settings := pkges.LanguageAnalyzerSettings(lang)
+		if err := c.EnsureIndex(ctx, indexName, settings, productMappings); err != nil {
+			return fmt.Errorf("ensure product index %s: %w", indexName, err)
 		}
 	}
 	return nil
 }
 
-// DeleteProductIndices deletes the pipeline and all product indices.
-func (c *Client) DeleteProductIndices(ctx context.Context) error {
-	indices := []string{c.Index}
-	for _, lang := range SupportedLanguages {
-		indices = append(indices, ProductIndexNameForLang(c.Index, lang))
+// DeleteProductIndices removes all product language-specific indices.
+func DeleteProductIndices(ctx context.Context, c *pkges.Client) error {
+	names := make([]string, 0, len(pkges.SupportedLanguages)+1)
+	names = append(names, c.Index)
+	for _, lang := range pkges.SupportedLanguages {
+		names = append(names, pkges.IndexNameForLang(c.Index, lang))
 	}
-
-	res, err := c.ES.Indices.Delete(
-		indices,
-		c.ES.Indices.Delete.WithContext(ctx),
-		c.ES.Indices.Delete.WithIgnoreUnavailable(true),
-	)
-	if err != nil {
-		return fmt.Errorf("delete product indices: %w", err)
-	}
-	defer res.Body.Close()
-	if res.IsError() {
-		return fmt.Errorf("delete product indices status: %s", res.Status())
-	}
-
-	// Best-effort pipeline deletion
-	pRes, err := c.ES.Ingest.DeletePipeline(
-		PipelineProductLangIdent,
-		c.ES.Ingest.DeletePipeline.WithContext(ctx),
-	)
-	if err == nil {
-		pRes.Body.Close()
-	}
-	return nil
-}
-
-// ensureLangDetectPipeline creates the ingest pipeline that:
-//  1. Detects language from the product `title` field using the ingest-langdetect plugin.
-//  2. Reroutes the document to the matching language index via a Painless script.
-func (c *Client) ensureLangDetectPipeline(ctx context.Context) error {
-	// Check if pipeline already exists (404 = not found, proceed to create)
-	res, err := c.ES.Ingest.GetPipeline(
-		c.ES.Ingest.GetPipeline.WithPipelineID(PipelineProductLangIdent),
-		c.ES.Ingest.GetPipeline.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("check pipeline: %w", err)
-	}
-	res.Body.Close()
-	if res.StatusCode == 200 {
-		return nil // already exists
-	}
-
-	pipeline := map[string]any{
-		"description": "Detect language from product title and route to language-specific index",
-		"processors": []any{
-			// Step 1: detect language via the ingest-langdetect plugin
-			map[string]any{
-				"langdetect": map[string]any{
-					"field":          "title",
-					"target_field":   "language",
-					"ignore_missing": true,
-					"on_failure": []any{
-						map[string]any{
-							"set": map[string]any{
-								"field": "language",
-								"value": "",
-							},
-						},
-					},
-				},
-			},
-			// Step 2: reroute to language-specific index when language is known
-			map[string]any{
-				"script": map[string]any{
-					"lang": "painless",
-					"source": `
-						String lang = ctx.containsKey('language') ? ctx['language'] : '';
-						if (lang != null && !lang.isEmpty()) {
-							ctx['_index'] = ctx['_index'] + '_' + lang;
-						}
-					`,
-				},
-			},
-		},
-	}
-
-	body, _ := json.Marshal(pipeline)
-	putRes, err := c.ES.Ingest.PutPipeline(
-		PipelineProductLangIdent,
-		bytes.NewReader(body),
-		c.ES.Ingest.PutPipeline.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("create langdetect pipeline: %w", err)
-	}
-	defer putRes.Body.Close()
-	if putRes.IsError() {
-		return fmt.Errorf("create langdetect pipeline status: %s", putRes.Status())
-	}
-	return nil
-}
-
-// createProductIndex creates one product index with language-specific analyzer settings
-// and shared field mappings. Skips creation if the index already exists.
-func (c *Client) createProductIndex(ctx context.Context, indexName, lang string) error {
-	res, err := c.ES.Indices.Exists([]string{indexName})
-	if err != nil {
-		return fmt.Errorf("check index %s: %w", indexName, err)
-	}
-	res.Body.Close()
-	if res.StatusCode == 200 {
-		return nil // already exists
-	}
-
-	body := map[string]any{
-		"settings": languageAnalyzerSettings(lang),
-		"mappings": ProductFieldMappings(),
-	}
-
-	encoded, err := json.Marshal(body)
-	if err != nil {
-		return fmt.Errorf("marshal index body: %w", err)
-	}
-
-	createRes, err := c.ES.Indices.Create(
-		indexName,
-		c.ES.Indices.Create.WithBody(strings.NewReader(string(encoded))),
-		c.ES.Indices.Create.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("create index %s: %w", indexName, err)
-	}
-	defer createRes.Body.Close()
-	if createRes.IsError() {
-		return fmt.Errorf("create index %s status: %s", indexName, createRes.Status())
-	}
-	return nil
+	return c.DeleteIndices(ctx, names...)
 }

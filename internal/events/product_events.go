@@ -3,7 +3,7 @@ package events
 import (
 	"time"
 
-	kafkaevents "be-modami-core-service/pkg/kafka/events"
+	kafkaevents "gitlab.com/lifegoeson-libs/pkg-gokit/kafka/events"
 )
 
 const (

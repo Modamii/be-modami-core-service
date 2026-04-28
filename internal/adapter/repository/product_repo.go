@@ -6,7 +6,7 @@ import (
 
 	"be-modami-core-service/internal/domain"
 	"be-modami-core-service/internal/port"
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -292,7 +292,7 @@ func (r *productMongoRepository) ListByHashtag(ctx context.Context, tag string, 
 
 func (r *productMongoRepository) listWithCursor(ctx context.Context, filter bson.M, cursor string, limit int, sortField string) ([]domain.Product, string, error) {
 	if cursor != "" {
-		cursorFilter, err := pagination.CursorFilter(cursor, sortField)
+		cursorFilter, err := pagination.CursorFilter(cursor, sortField, pagination.OrderDesc)
 		if err == nil && len(cursorFilter) > 0 {
 			for _, elem := range cursorFilter {
 				filter[elem.Key] = elem.Value

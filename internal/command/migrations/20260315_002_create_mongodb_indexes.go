@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"be-modami-core-service/internal/command"
-	mongodb "be-modami-core-service/pkg/storage/database/mongodb"
+	mongodb "be-modami-core-service/pkg/mongodb"
 
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 

@@ -6,7 +6,7 @@ import (
 
 	"be-modami-core-service/internal/domain"
 	"be-modami-core-service/internal/port"
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -120,7 +120,7 @@ func (r *blogMongoRepository) ListTrendReports(ctx context.Context, cursor strin
 // It sorts by published_at DESC, _id DESC and fetches limit+1 items to detect a next page.
 func (r *blogMongoRepository) listWithCursor(ctx context.Context, filter bson.M, cursor string, limit int) ([]domain.BlogPost, string, error) {
 	if cursor != "" {
-		cursorFilter, err := pagination.CursorFilter(cursor, "published_at")
+		cursorFilter, err := pagination.CursorFilter(cursor, "published_at", pagination.OrderDesc)
 		if err == nil && len(cursorFilter) > 0 {
 			for _, elem := range cursorFilter {
 				filter[elem.Key] = elem.Value

@@ -9,7 +9,7 @@ import (
 	"be-modami-core-service/internal/domain"
 	"be-modami-core-service/internal/dto"
 	"be-modami-core-service/internal/service"
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 	"be-modami-core-service/pkg/validator"
 )
 

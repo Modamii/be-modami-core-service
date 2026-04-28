@@ -9,15 +9,16 @@ import (
 
 	"be-modami-core-service/internal/domain"
 	internalevents "be-modami-core-service/internal/events"
-	"be-modami-core-service/pkg/kafka"
-	kafkaevents "be-modami-core-service/pkg/kafka/events"
+	localkafka "be-modami-core-service/pkg/kafka"
+	pkgkafka "gitlab.com/lifegoeson-libs/pkg-gokit/kafka"
+	kafkaevents "gitlab.com/lifegoeson-libs/pkg-gokit/kafka/events"
 )
 
 type ProductProducer struct {
-	producer kafka.Producer
+	producer pkgkafka.Producer
 }
 
-func NewProductProducer(producer kafka.Producer) *ProductProducer {
+func NewProductProducer(producer pkgkafka.Producer) *ProductProducer {
 	return &ProductProducer{producer: producer}
 }
 
@@ -42,7 +43,7 @@ func (p *ProductProducer) ProductCreatedWithData(ctx context.Context, product *d
 		Images:       imageURLs(product),
 		CreatedAt:    product.CreatedAt,
 	}
-	return p.emitAsync(ctx, kafka.TopicProductCreated, product.ID.Hex(), payload, "product created")
+	return p.emitAsync(ctx, localkafka.TopicProductCreated, product.ID.Hex(), payload, "product created")
 }
 
 func (p *ProductProducer) ProductUpdatedWithData(ctx context.Context, product *domain.Product) error {
@@ -66,7 +67,7 @@ func (p *ProductProducer) ProductUpdatedWithData(ctx context.Context, product *d
 		Images:       imageURLs(product),
 		UpdatedAt:    product.UpdatedAt,
 	}
-	return p.emitAsync(ctx, kafka.TopicProductUpdated, product.ID.Hex(), payload, "product updated")
+	return p.emitAsync(ctx, localkafka.TopicProductUpdated, product.ID.Hex(), payload, "product updated")
 }
 
 func (p *ProductProducer) ProductDeleted(ctx context.Context, productID, slug string) error {
@@ -78,11 +79,11 @@ func (p *ProductProducer) ProductDeleted(ctx context.Context, productID, slug st
 		ProductID: productID,
 		Slug:      slug,
 	}
-	return p.emitAsync(ctx, kafka.TopicProductDeleted, productID, payload, "product deleted")
+	return p.emitAsync(ctx, localkafka.TopicProductDeleted, productID, payload, "product deleted")
 }
 
 func (p *ProductProducer) emitAsync(ctx context.Context, topic, key string, payload interface{}, eventName string) error {
-	p.producer.EmitAsync(ctx, topic, &kafka.ProducerMessage{
+	p.producer.EmitAsync(ctx, topic, &pkgkafka.ProducerMessage{
 		Key:   key,
 		Value: payload,
 	})

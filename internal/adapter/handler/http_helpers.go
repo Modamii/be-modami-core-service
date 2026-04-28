@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 	"be-modami-core-service/pkg/validator"
 
 	"github.com/gin-gonic/gin"

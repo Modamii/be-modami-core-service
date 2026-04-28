@@ -99,24 +99,54 @@ type KeycloakConfig struct {
 }
 
 type RedisConfig struct {
-	Host         string        `mapstructure:"host"`
-	Port         int           `mapstructure:"port"`
-	Database     int           `mapstructure:"database"`
-	Pass         string        `mapstructure:"pass"`
-	UserName     string        `mapstructure:"user_name"`
-	PoolSize     int           `mapstructure:"pool_size"`
-	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
-	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	Host              string         `mapstructure:"host"`
+	Port              int            `mapstructure:"port"`
+	Database          int            `mapstructure:"database"`
+	RateLimitDatabase int            `mapstructure:"rate_limit_database"`
+	TTL               string         `mapstructure:"ttl"`
+	PoolSize          int            `mapstructure:"pool_size"`
+	Pass              string         `mapstructure:"pass"`
+	UserName          string         `mapstructure:"user_name"`
+	WriteTimeout      string         `mapstructure:"write_timeout"`
+	ReadTimeout       string         `mapstructure:"read_timeout"`
+	DialTimeout       string         `mapstructure:"dial_timeout"`
+	TLSConfig         RedisTLSConfig `mapstructure:"tls_config"`
+}
+
+type RedisTLSConfig struct {
+	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify"`
 }
 
 func (r RedisConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
+func (r RedisConfig) GetDialTimeout() time.Duration {
+	d, err := time.ParseDuration(r.DialTimeout)
+	if err != nil {
+		return 5 * time.Second
+	}
+	return d
+}
+
+func (r RedisConfig) GetReadTimeout() time.Duration {
+	d, err := time.ParseDuration(r.ReadTimeout)
+	if err != nil {
+		return 3 * time.Second
+	}
+	return d
+}
+
+func (r RedisConfig) GetWriteTimeout() time.Duration {
+	d, err := time.ParseDuration(r.WriteTimeout)
+	if err != nil {
+		return 3 * time.Second
+	}
+	return d
+}
+
 type KafkaConfig struct {
 	BrokerList    string `mapstructure:"broker_list"`
-	Enable        bool   `mapstructure:"enable"`
 	Env           string `mapstructure:"env"`
 	ClientID      string `mapstructure:"client_id"`
 	ConsumerGroup string `mapstructure:"consumer_group"`
@@ -130,7 +160,6 @@ func (k KafkaConfig) Brokers() []string {
 }
 
 type ElasticsearchConfig struct {
-	Enable   bool   `mapstructure:"enable"`
 	URL      string `mapstructure:"url"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
@@ -152,31 +181,6 @@ func Load() (*Config, error) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
 	v.AddConfigPath("./config")
-
-	v.SetDefault("app.name", "Modami core")
-	v.SetDefault("app.version", "1.0.0")
-	v.SetDefault("app.environment", "development")
-	v.SetDefault("app.debug", true)
-	v.SetDefault("app.port", 8080)
-	v.SetDefault("app.host", "0.0.0.0")
-	v.SetDefault("app.swagger_host", "localhost:8087")
-	v.SetDefault("app.shutdown_timeout", "30s")
-	v.SetDefault("app.read_timeout", "30s")
-	v.SetDefault("app.write_timeout", "30s")
-	v.SetDefault("app.idle_timeout", "120s")
-
-	v.SetDefault("mongodb.uri", "mongodb://localhost:27017")
-	v.SetDefault("mongodb.database", "modami")
-	v.SetDefault("observability.log_level", "info")
-	v.SetDefault("observability.environment", "development")
-	v.SetDefault("kafka.env", "development")
-	v.SetDefault("app.allow_credentials", true)
-	v.SetDefault("app.allowed_origins", []string{
-		"http://localhost:5173",
-		"http://localhost:3000",
-		"http://localhost:8080",
-		"http://localhost:8081",
-	})
 
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {

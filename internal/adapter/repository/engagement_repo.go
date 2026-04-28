@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"be-modami-core-service/pkg/storage/database/mongodb/pagination"
+	"gitlab.com/lifegoeson-libs/pkg-gokit/mongodb/pagination"
 )
 
 // ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ func (r *mongoFavoriteRepo) Remove(ctx context.Context, userID string, productID
 func (r *mongoFavoriteRepo) ListByUser(ctx context.Context, userID string, cursor string, limit int) ([]domain.Favorite, string, error) {
 	filter := bson.M{"user_id": userID}
 	if cursor != "" {
-		cf, err := pagination.CursorFilter(cursor, "created_at")
+		cf, err := pagination.CursorFilter(cursor, "created_at", pagination.OrderDesc)
 		if err == nil && len(cf) > 0 {
 			for _, elem := range cf {
 				filter[elem.Key] = elem.Value
@@ -54,7 +54,7 @@ func (r *mongoFavoriteRepo) ListByUser(ctx context.Context, userID string, curso
 
 	opts := options.Find().
 		SetLimit(int64(limit + 1)).
-		SetSort(bson.D{{"created_at", -1}, {"_id", -1}})
+		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "_id", Value: -1}})
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
@@ -116,7 +116,7 @@ func (r *mongoSavedProductRepo) Remove(ctx context.Context, userID string, produ
 func (r *mongoSavedProductRepo) ListByUser(ctx context.Context, userID string, cursor string, limit int) ([]domain.SavedProduct, string, error) {
 	filter := bson.M{"user_id": userID}
 	if cursor != "" {
-		cf, err := pagination.CursorFilter(cursor, "created_at")
+		cf, err := pagination.CursorFilter(cursor, "created_at", pagination.OrderDesc)
 		if err == nil && len(cf) > 0 {
 			for _, elem := range cf {
 				filter[elem.Key] = elem.Value
@@ -126,7 +126,7 @@ func (r *mongoSavedProductRepo) ListByUser(ctx context.Context, userID string, c
 
 	opts := options.Find().
 		SetLimit(int64(limit + 1)).
-		SetSort(bson.D{{"created_at", -1}, {"_id", -1}})
+		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "_id", Value: -1}})
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
@@ -187,7 +187,7 @@ func (r *mongoSavedCollectionRepo) Create(ctx context.Context, sc *domain.SavedC
 }
 
 func (r *mongoSavedCollectionRepo) List(ctx context.Context, userID string) ([]domain.SavedCollection, error) {
-	opts := options.Find().SetSort(bson.D{{"created_at", -1}})
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cur, err := r.col.Find(ctx, bson.M{"user_id": userID}, opts)
 	if err != nil {
 		return nil, err
@@ -279,7 +279,7 @@ func (r *mongoFollowRepo) CountFollowing(ctx context.Context, followerID string)
 
 func (r *mongoFollowRepo) listWithCursor(ctx context.Context, filter bson.M, cursor string, limit int) ([]domain.Follow, string, error) {
 	if cursor != "" {
-		cf, err := pagination.CursorFilter(cursor, "created_at")
+		cf, err := pagination.CursorFilter(cursor, "created_at", pagination.OrderDesc)
 		if err == nil && len(cf) > 0 {
 			for _, elem := range cf {
 				filter[elem.Key] = elem.Value
@@ -289,7 +289,7 @@ func (r *mongoFollowRepo) listWithCursor(ctx context.Context, filter bson.M, cur
 
 	opts := options.Find().
 		SetLimit(int64(limit + 1)).
-		SetSort(bson.D{{"created_at", -1}, {"_id", -1}})
+		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "_id", Value: -1}})
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
@@ -362,7 +362,7 @@ func (r *mongoReviewRepo) GetByOrderID(ctx context.Context, orderID bson.ObjectI
 
 func (r *mongoReviewRepo) listWithCursor(ctx context.Context, filter bson.M, cursor string, limit int) ([]domain.Review, string, error) {
 	if cursor != "" {
-		cf, err := pagination.CursorFilter(cursor, "created_at")
+		cf, err := pagination.CursorFilter(cursor, "created_at", pagination.OrderDesc)
 		if err == nil && len(cf) > 0 {
 			for _, elem := range cf {
 				filter[elem.Key] = elem.Value
@@ -372,7 +372,7 @@ func (r *mongoReviewRepo) listWithCursor(ctx context.Context, filter bson.M, cur
 
 	opts := options.Find().
 		SetLimit(int64(limit + 1)).
-		SetSort(bson.D{{"created_at", -1}, {"_id", -1}})
+		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "_id", Value: -1}})
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {

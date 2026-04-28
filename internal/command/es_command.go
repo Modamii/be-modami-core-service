@@ -6,7 +6,7 @@ import (
 
 	"be-modami-core-service/internal/adapter/repository"
 	"be-modami-core-service/internal/domain"
-	es "be-modami-core-service/pkg/elasticsearch"
+	"be-modami-core-service/pkg/elasticsearch"
 
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
@@ -50,7 +50,7 @@ func newESInitIndexCommand() *cobra.Command {
 				return fmt.Errorf("elasticsearch is not available")
 			}
 
-			if err := cmdCtx.ESClient.EnsureProductIndices(ctx); err != nil {
+			if err := elasticsearch.EnsureProductIndices(ctx, cmdCtx.ESClient); err != nil {
 				return fmt.Errorf("failed to initialize products index: %w", err)
 			}
 
@@ -79,7 +79,7 @@ func newESDeleteIndexCommand() *cobra.Command {
 				return fmt.Errorf("elasticsearch is not available")
 			}
 
-			if err := cmdCtx.ESClient.DeleteProductIndices(ctx); err != nil {
+			if err := elasticsearch.DeleteProductIndices(ctx, cmdCtx.ESClient); err != nil {
 				return fmt.Errorf("failed to delete products index: %w", err)
 			}
 
@@ -115,13 +115,13 @@ func newESReindexCommand() *cobra.Command {
 			// Delete existing index if --clean flag is set
 			if clean {
 				l.Info("Cleaning existing index before reindex...")
-				if err := cmdCtx.ESClient.DeleteProductIndices(ctx); err != nil {
+				if err := elasticsearch.DeleteProductIndices(ctx, cmdCtx.ESClient); err != nil {
 					return fmt.Errorf("failed to delete index: %w", err)
 				}
 			}
 
 			// Ensure index exists
-			if err := cmdCtx.ESClient.EnsureProductIndices(ctx); err != nil {
+			if err := elasticsearch.EnsureProductIndices(ctx, cmdCtx.ESClient); err != nil {
 				return fmt.Errorf("failed to initialize index: %w", err)
 			}
 
@@ -140,7 +140,7 @@ func newESReindexCommand() *cobra.Command {
 					break
 				}
 
-				docs := make([]*es.ProductDocument, 0, len(products))
+				docs := make([]*elasticsearch.ProductDocument, 0, len(products))
 				for i := range products {
 					if products[i].Status == domain.StatusActive {
 						docs = append(docs, buildProductDocument(&products[i]))
@@ -148,7 +148,7 @@ func newESReindexCommand() *cobra.Command {
 				}
 
 				if len(docs) > 0 {
-					if err := cmdCtx.ESClient.BulkIndexProducts(ctx, docs); err != nil {
+					if err := elasticsearch.BulkIndexProducts(ctx, cmdCtx.ESClient, docs); err != nil {
 						l.Error("Failed to bulk index batch", err)
 					} else {
 						totalSynced += len(docs)
@@ -197,7 +197,7 @@ func newESHealthCommand() *cobra.Command {
 				return fmt.Errorf("elasticsearch is not available")
 			}
 
-			if err := cmdCtx.ESClient.Ping(); err != nil {
+			if err := elasticsearch.Ping(cmdCtx.ESClient); err != nil {
 				return fmt.Errorf("elasticsearch health check failed: %w", err)
 			}
 
@@ -207,7 +207,7 @@ func newESHealthCommand() *cobra.Command {
 	}
 }
 
-func buildProductDocument(p *domain.Product) *es.ProductDocument {
+func buildProductDocument(p *domain.Product) *elasticsearch.ProductDocument {
 	var categoryID, categoryName string
 	if p.Category != nil {
 		categoryID = p.Category.ID.Hex()
@@ -219,7 +219,7 @@ func buildProductDocument(p *domain.Product) *es.ProductDocument {
 		images = append(images, img.URL)
 	}
 
-	return &es.ProductDocument{
+	return &elasticsearch.ProductDocument{
 		ID:           p.ID.Hex(),
 		Slug:         p.Slug,
 		Title:        p.Title,

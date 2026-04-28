@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"be-modami-core-service/internal/command"
-	es "be-modami-core-service/pkg/elasticsearch"
+	"be-modami-core-service/pkg/elasticsearch"
+	pkges "gitlab.com/lifegoeson-libs/pkg-gokit/elasticsearch"
 
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 
@@ -24,7 +25,7 @@ func init() {
 				return fmt.Errorf("config not available")
 			}
 
-			esClient, err := es.NewClient(&es.Config{
+			esClient, err := pkges.Connect(ctx, pkges.Config{
 				URL:      cfg.Elasticsearch.URL,
 				Username: cfg.Elasticsearch.Username,
 				Password: cfg.Elasticsearch.Password,
@@ -34,11 +35,11 @@ func init() {
 				return fmt.Errorf("failed to connect to Elasticsearch: %w", err)
 			}
 
-			if err := esClient.Ping(); err != nil {
+			if err := elasticsearch.Ping(esClient); err != nil {
 				return fmt.Errorf("elasticsearch is not reachable: %w", err)
 			}
 
-			if err := esClient.EnsureProductIndices(ctx); err != nil {
+			if err := elasticsearch.EnsureProductIndices(ctx, esClient); err != nil {
 				return fmt.Errorf("failed to create ES products index: %w", err)
 			}
 

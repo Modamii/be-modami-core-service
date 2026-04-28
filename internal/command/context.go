@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	config "be-modami-core-service/config"
-	es "be-modami-core-service/pkg/elasticsearch"
-	mongodb "be-modami-core-service/pkg/storage/database/mongodb"
-	redisStorage "be-modami-core-service/pkg/storage/redis"
-
+	"be-modami-core-service/pkg/elasticsearch"
+	pkges "gitlab.com/lifegoeson-libs/pkg-gokit/elasticsearch"
+	pkgmongo "gitlab.com/lifegoeson-libs/pkg-gokit/mongodb"
+	pkgredis "gitlab.com/lifegoeson-libs/pkg-gokit/redis"
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 
-	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	mongodri "go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 var cfg *config.Config
@@ -28,10 +27,10 @@ func GetConfig() *config.Config {
 // CommandContext holds shared connections for commands.
 type CommandContext struct {
 	Config      *config.Config
-	DB          *mongo.Database
+	DB          *mongodri.Database
 	disconnect  func()
-	RedisClient *redis.Client
-	ESClient    *es.Client
+	RedisClient pkgredis.CachePort
+	ESClient    *pkges.Client
 }
 
 func NewCommandContext() (*CommandContext, error) {
@@ -46,7 +45,7 @@ func NewCommandContext() (*CommandContext, error) {
 
 	// Connect MongoDB
 	l.Info("Connecting to MongoDB...")
-	db, disconnect, err := mongodb.Connect(ctx, cfg.Mongo.URI, cfg.Mongo.Database)
+	db, disconnect, err := pkgmongo.Connect(ctx, cfg.Mongo.URI, cfg.Mongo.Database)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
@@ -55,14 +54,14 @@ func NewCommandContext() (*CommandContext, error) {
 
 	// Connect Redis
 	l.Info("Connecting to Redis...")
-	redisClient, err := redisStorage.NewRedisClient(redisStorage.RedisConfig{
-		Addr:         cfg.Redis.Addr(),
+	redisClient, err := pkgredis.NewAdapter(pkgredis.Config{
+		Addrs:        []string{cfg.Redis.Addr()},
 		Password:     cfg.Redis.Pass,
 		DB:           cfg.Redis.Database,
 		PoolSize:     cfg.Redis.PoolSize,
-		DialTimeout:  cfg.Redis.DialTimeout,
-		ReadTimeout:  cfg.Redis.ReadTimeout,
-		WriteTimeout: cfg.Redis.WriteTimeout,
+		DialTimeout:  cfg.Redis.GetDialTimeout(),
+		ReadTimeout:  cfg.Redis.GetReadTimeout(),
+		WriteTimeout: cfg.Redis.GetWriteTimeout(),
 	})
 	if err != nil {
 		cmdCtx.Close()
@@ -72,7 +71,7 @@ func NewCommandContext() (*CommandContext, error) {
 
 	// Connect Elasticsearch
 	l.Info("Connecting to Elasticsearch...")
-	esClient, err := es.NewClient(&es.Config{
+	esClient, err := pkges.Connect(ctx, pkges.Config{
 		URL:      cfg.Elasticsearch.URL,
 		Username: cfg.Elasticsearch.Username,
 		Password: cfg.Elasticsearch.Password,
@@ -81,7 +80,7 @@ func NewCommandContext() (*CommandContext, error) {
 	if err != nil {
 		l.Warn("Failed to create Elasticsearch client")
 	} else {
-		if pingErr := esClient.Ping(); pingErr != nil {
+		if pingErr := elasticsearch.Ping(esClient); pingErr != nil {
 			l.Warn("Elasticsearch ping failed")
 		} else {
 			cmdCtx.ESClient = esClient
@@ -92,7 +91,7 @@ func NewCommandContext() (*CommandContext, error) {
 	return cmdCtx, nil
 }
 
-func (c *CommandContext) GetMongoDatabase() *mongo.Database {
+func (c *CommandContext) GetMongoDatabase() *mongodri.Database {
 	return c.DB
 }
 
@@ -101,6 +100,6 @@ func (c *CommandContext) Close() {
 		c.disconnect()
 	}
 	if c.RedisClient != nil {
-		c.RedisClient.Close()
+		_ = c.RedisClient.Close()
 	}
 }

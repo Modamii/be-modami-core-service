@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/twmb/franz-go/pkg/kgo"
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -14,48 +13,50 @@ import (
 	"be-modami-core-service/internal/events"
 	"be-modami-core-service/internal/port"
 	"be-modami-core-service/pkg/elasticsearch"
-	"be-modami-core-service/pkg/kafka"
-	"be-modami-core-service/pkg/storage/redis"
+	localkafka "be-modami-core-service/pkg/kafka"
+	pkges "gitlab.com/lifegoeson-libs/pkg-gokit/elasticsearch"
+	pkgkafka "gitlab.com/lifegoeson-libs/pkg-gokit/kafka"
+	pkgredis "gitlab.com/lifegoeson-libs/pkg-gokit/redis"
 )
 
 type SyncProductConsumer struct {
-	esClient    *elasticsearch.Client
-	cacheClient *redis.RedisClient
+	esClient    *pkges.Client
+	cacheClient pkgredis.CachePort
 	productRepo port.ProductRepository
 }
 
-func NewSyncProductConsumer(esClient *elasticsearch.Client, productRepo port.ProductRepository) *SyncProductConsumer {
+func NewSyncProductConsumer(esClient *pkges.Client, productRepo port.ProductRepository) *SyncProductConsumer {
 	return &SyncProductConsumer{esClient: esClient, productRepo: productRepo}
 }
 
 func (c *SyncProductConsumer) GetTopics() []string {
 	return []string{
-		kafka.TopicProductCreated,
-		kafka.TopicProductUpdated,
-		kafka.TopicProductDeleted,
+		localkafka.TopicProductCreated,
+		localkafka.TopicProductUpdated,
+		localkafka.TopicProductDeleted,
 	}
 }
 
-func (c *SyncProductConsumer) HandleMessage(ctx context.Context, record *kgo.Record) error {
-	switch record.Topic {
-	case kafka.TopicProductCreated, kafka.TopicProductUpdated:
-		c.handleESUpsert(ctx, record)
-		c.handlerCacheDelete(ctx, record)
+func (c *SyncProductConsumer) HandleMessage(ctx context.Context, msg *pkgkafka.Message) error {
+	switch msg.Topic {
+	case localkafka.TopicProductCreated, localkafka.TopicProductUpdated:
+		c.handleESUpsert(ctx, msg)
+		c.handlerCacheDelete(ctx, msg)
 		return nil
-	case kafka.TopicProductDeleted:
-		c.handleESDelete(ctx, record)
-		c.handlerCacheDelete(ctx, record)
+	case localkafka.TopicProductDeleted:
+		c.handleESDelete(ctx, msg)
+		c.handlerCacheDelete(ctx, msg)
 		return nil
 	default:
 		return nil
 	}
 }
 
-func (c *SyncProductConsumer) handleESUpsert(ctx context.Context, record *kgo.Record) error {
+func (c *SyncProductConsumer) handleESUpsert(ctx context.Context, msg *pkgkafka.Message) error {
 	var base struct {
 		ProductID string `json:"productId"`
 	}
-	if err := json.Unmarshal(record.Value, &base); err != nil {
+	if err := json.Unmarshal(msg.Value, &base); err != nil {
 		return fmt.Errorf("unmarshal product event: %w", err)
 	}
 
@@ -70,12 +71,11 @@ func (c *SyncProductConsumer) handleESUpsert(ctx context.Context, record *kgo.Re
 		return nil
 	}
 
-	// Only index active products
 	if product.Status != domain.StatusActive {
 		return nil
 	}
 
-	if err := c.esClient.IndexProduct(ctx, buildProductDocument(product)); err != nil {
+	if err := elasticsearch.IndexProduct(ctx, c.esClient, buildProductDocument(product)); err != nil {
 		logger.Error(ctx, "sync: es index failed", err, logging.String("id", product.ID.Hex()))
 		return err
 	}
@@ -84,9 +84,12 @@ func (c *SyncProductConsumer) handleESUpsert(ctx context.Context, record *kgo.Re
 	return nil
 }
 
-func (c *SyncProductConsumer) handlerCacheDelete(ctx context.Context, record *kgo.Record) error {
+func (c *SyncProductConsumer) handlerCacheDelete(ctx context.Context, msg *pkgkafka.Message) error {
+	if c.cacheClient == nil {
+		return nil
+	}
 	var payload events.ProductDeletedPayload
-	if err := json.Unmarshal(record.Value, &payload); err != nil {
+	if err := json.Unmarshal(msg.Value, &payload); err != nil {
 		return fmt.Errorf("unmarshal product deleted event: %w", err)
 	}
 
@@ -99,13 +102,13 @@ func (c *SyncProductConsumer) handlerCacheDelete(ctx context.Context, record *kg
 	return nil
 }
 
-func (c *SyncProductConsumer) handleESDelete(ctx context.Context, record *kgo.Record) error {
+func (c *SyncProductConsumer) handleESDelete(ctx context.Context, msg *pkgkafka.Message) error {
 	var payload events.ProductDeletedPayload
-	if err := json.Unmarshal(record.Value, &payload); err != nil {
+	if err := json.Unmarshal(msg.Value, &payload); err != nil {
 		return fmt.Errorf("unmarshal product deleted event: %w", err)
 	}
 
-	if err := c.esClient.DeleteProduct(ctx, payload.ProductID); err != nil {
+	if err := elasticsearch.DeleteProduct(ctx, c.esClient, payload.ProductID); err != nil {
 		logger.Error(ctx, "sync: es delete failed", err, logging.String("id", payload.ProductID))
 		return err
 	}

@@ -14,9 +14,11 @@ import (
 	"be-modami-core-service/internal/adapter/repository"
 	"be-modami-core-service/internal/port"
 	"be-modami-core-service/internal/service"
-	kafkapkg "be-modami-core-service/pkg/kafka"
-	"be-modami-core-service/pkg/storage/database/mongodb"
-	redisstorage "be-modami-core-service/pkg/storage/redis"
+	localkafka "be-modami-core-service/pkg/kafka"
+	"be-modami-core-service/pkg/mongodb"
+
+	pkgkafka "gitlab.com/lifegoeson-libs/pkg-gokit/kafka"
+	pkgredis "gitlab.com/lifegoeson-libs/pkg-gokit/redis"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -25,198 +27,267 @@ import (
 	logging "gitlab.com/lifegoeson-libs/pkg-logging"
 	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
 	loggingmw "gitlab.com/lifegoeson-libs/pkg-logging/middleware"
+	mongodri "go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+// Application holds the running HTTP server.
 type Application struct {
 	HTTPServer *http.Server
 }
 
+// appRepos groups all MongoDB repository instances.
+type appRepos struct {
+	product         port.ProductRepository
+	category        port.CategoryRepository
+	hashtag         port.HashtagRepository
+	favorite        port.FavoriteRepository
+	savedProduct    port.SavedProductRepository
+	savedCollection port.SavedCollectionRepository
+	follow          port.FollowRepository
+	review          port.ReviewRepository
+	blog            port.BlogRepository
+}
+
+// appServices groups all domain service instances.
+type appServices struct {
+	product    *service.ProductService
+	masterdata *service.MasterdataService
+	seller     *service.SellerService
+	blog       *service.BlogService
+	homeFeed   *service.HomeFeedService
+}
+
 func newApplication(ctx context.Context, cfg *config.Config, conns *Connections) (*Application, error) {
-	db := conns.DB
+	mongodb.EnsureIndexes(ctx, conns.DB)
 
-	mongodb.EnsureIndexes(ctx, db)
+	repos := initRepositories(conns.DB)
+	prod := newKafkaProducer(cfg)
+	svcs := initServices(repos, conns.Redis, prod)
 
-	productRepo := repository.NewProductRepository(db)
-	categoryRepo := repository.NewCategoryRepository(db)
-	hashtagRepo := repository.NewHashtagRepository(db)
-	favoriteRepo := repository.NewFavoriteRepository(db)
-	savedProductRepo := repository.NewSavedProductRepository(db)
-	savedCollectionRepo := repository.NewSavedCollectionRepository(db)
-	followRepo := repository.NewFollowRepository(db)
-	reviewRepo := repository.NewReviewRepository(db)
-	blogRepo := repository.NewBlogRepository(db)
+	routerHandler := buildRouter(cfg, svcs)
+	startSyncConsumer(ctx, cfg, conns, repos.product)
 
-	var redisCache redisstorage.RedisCacheService
-	if conns.Redis != nil {
-		redisCache = redisstorage.NewRedisCacheService(conns.Redis)
+	srv := newHTTPServer(cfg, routerHandler)
+	logger.Info(ctx, "application routes registered", logging.String("addr", cfg.App.ListenAddr()))
+
+	return &Application{HTTPServer: srv}, nil
+}
+
+// initRepositories constructs all MongoDB repository adapters.
+func initRepositories(db *mongodri.Database) *appRepos {
+	return &appRepos{
+		product:         repository.NewProductRepository(db),
+		category:        repository.NewCategoryRepository(db),
+		hashtag:         repository.NewHashtagRepository(db),
+		favorite:        repository.NewFavoriteRepository(db),
+		savedProduct:    repository.NewSavedProductRepository(db),
+		savedCollection: repository.NewSavedCollectionRepository(db),
+		follow:          repository.NewFollowRepository(db),
+		review:          repository.NewReviewRepository(db),
+		blog:            repository.NewBlogRepository(db),
 	}
+}
 
-	var kafkaProducer kafkapkg.Producer
-	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 {
-		ks, err := kafkapkg.NewKafkaService(&kafkapkg.KafkaConfig{
-			Brokers:          cfg.Kafka.Brokers(),
-			ClientID:         cfg.Kafka.ClientID + "-producer",
-			ProducerOnlyMode: true,
-		}, cfg.Kafka.Env)
-		if err == nil {
-			kafkaProducer = ks
-		}
+// initServices wires domain services from repositories, cache, and producer.
+func initServices(repos *appRepos, cache pkgredis.CachePort, prod port.ProductProducer) *appServices {
+	return &appServices{
+		product:    service.NewProductService(repos.product, repos.category, cache, prod),
+		masterdata: service.NewMasterdataService(repos.category, repos.hashtag),
+		seller:     service.NewSellerService(repos.product, repos.favorite, repos.follow, repos.review),
+		blog:       service.NewBlogService(repos.blog),
+		homeFeed:   service.NewHomeFeedService(repos.product, repos.category, repos.blog),
 	}
+}
 
-	var productProducer port.ProductProducer
-	if kafkaProducer != nil {
-		productProducer = producer.NewProductProducer(kafkaProducer)
+// newKafkaProducer creates a Kafka producer if Kafka is enabled; returns nil otherwise.
+func newKafkaProducer(cfg *config.Config) port.ProductProducer {
+	if len(cfg.Kafka.Brokers()) == 0 {
+		return nil
 	}
-	productSvc := service.NewProductService(productRepo, categoryRepo, redisCache, productProducer)
-	masterdataSvc := service.NewMasterdataService(categoryRepo, hashtagRepo)
-	sellerSvc := service.NewSellerService(productRepo, favoriteRepo, followRepo, reviewRepo)
-	blogSvc := service.NewBlogService(blogRepo)
-	homeFeedSvc := service.NewHomeFeedService(productRepo, categoryRepo, blogRepo)
+	kafkaCfg := &pkgkafka.Config{
+		Brokers:          cfg.Kafka.Brokers(),
+		ClientID:         cfg.Kafka.ClientID + "-producer",
+		ProducerOnlyMode: true,
+	}
+	var opts []pkgkafka.ServiceOption
+	if cfg.Kafka.Env != "" {
+		resolver := localkafka.NewEnvTopicResolver(cfg.Kafka.Env,
+			localkafka.TopicProductCreated,
+			localkafka.TopicProductUpdated,
+			localkafka.TopicProductDeleted,
+		)
+		opts = append(opts, pkgkafka.WithTopicResolver(resolver))
+	}
+	ks, err := pkgkafka.NewKafkaService(kafkaCfg, opts...)
+	if err != nil {
+		return nil
+	}
+	return producer.NewProductProducer(ks)
+}
 
-	productH := handler.NewProductHandler(productSvc)
-	masterdataH := handler.NewMasterdataHandler(masterdataSvc)
-	sellerH := handler.NewSellerHandler(sellerSvc)
-	searchH := handler.NewSearchHandler(productH, masterdataH)
-	blogH := handler.NewBlogHandler(blogSvc)
-	homeFeedH := handler.NewHomeFeedHandler(homeFeedSvc)
-
-	_ = favoriteRepo
-	_ = savedProductRepo
-	_ = savedCollectionRepo
-	_ = reviewRepo
-
+// buildRouter constructs the Gin engine with all middleware and routes registered.
+func buildRouter(cfg *config.Config, svcs *appServices) http.Handler {
 	if !cfg.App.Debug && cfg.Observability.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	productH := handler.NewProductHandler(svcs.product)
+	masterdataH := handler.NewMasterdataHandler(svcs.masterdata)
+	sellerH := handler.NewSellerHandler(svcs.seller)
+	searchH := handler.NewSearchHandler(productH, masterdataH)
+	blogH := handler.NewBlogHandler(svcs.blog)
+	homeFeedH := handler.NewHomeFeedHandler(svcs.homeFeed)
+
 	auth := hmw.NewAuth(cfg.Keycloak.JWKSUrl)
 
-	router := gin.New()
-	router.Use(gin.Recovery())
-	origins := cfg.App.AllowedOrigins
-	if len(origins) == 0 {
-		origins = []string{
-			"http://localhost:5173",
-			"http://localhost:3000",
-			"http://localhost:8080",
-			"http://localhost:8081",
-		}
-	}
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     origins,
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.App.AllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
 		AllowCredentials: cfg.App.AllowCredentials,
 		MaxAge:           300,
 	}))
 
-	router.GET("/health", handler.Health)
+	r.GET("/health", handler.Health)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	registerRoutes(r.Group("/v1/core-services"), auth, productH, masterdataH, sellerH, searchH, blogH, homeFeedH)
 
-	v1 := router.Group("/v1/core-services")
+	serviceName := resolveServiceName(cfg)
+	return loggingmw.HTTPMiddleware(serviceName, r, &loggingmw.HttpLoggingOptions{
+		ExceptRoutes: []string{"/health", "/swagger", "/swagger/index.html"},
+	})
+}
 
+// registerRoutes attaches all v1 routes to the provided router group.
+func registerRoutes(
+	v1 *gin.RouterGroup,
+	auth *hmw.Auth,
+	productH *handler.ProductHandler,
+	masterdataH *handler.MasterdataHandler,
+	sellerH *handler.SellerHandler,
+	searchH *handler.SearchHandler,
+	blogH *handler.BlogHandler,
+	homeFeedH *handler.HomeFeedHandler,
+) {
 	v1.GET("/home-feeds", homeFeedH.GetHomeFeed)
 
+	// Products — public
 	v1.GET("/products/feed", productH.Feed)
 	v1.GET("/products/featured", productH.Featured)
 	v1.GET("/products/select", productH.SelectProducts)
 	v1.GET("/products/search", productH.Search)
 	v1.GET("/products/slug/:slug", productH.GetBySlug)
-
-	authProducts := v1.Group("")
-	authProducts.Use(auth.Required())
-	authProducts.GET("/products/me", productH.MyProducts)
-
 	v1.GET("/products/:id", productH.GetByID)
 	v1.GET("/products/:id/similar", productH.Similar)
 	v1.GET("/products/:id/moderation", productH.GetModeration)
 	v1.POST("/products/:id/view", productH.TrackView)
 
+	// Products — authenticated
+	authProducts := v1.Group("")
+	authProducts.Use(auth.Required())
+	authProducts.GET("/products/me", productH.MyProducts)
+	authProducts.POST("/products", productH.Create)
+	authProducts.PUT("/products/:id", productH.Update)
+	authProducts.DELETE("/products/:id", productH.Delete)
+	authProducts.POST("/products/:id/submit", productH.Submit)
+	authProducts.POST("/products/:id/resubmit", productH.Resubmit)
+	authProducts.POST("/products/:id/archive", productH.Archive)
+	authProducts.POST("/products/:id/unarchive", productH.Unarchive)
+
+	// Search
 	v1.GET("/search", searchH.Search)
 	v1.GET("/search/suggest", searchH.Suggest)
 	v1.GET("/search/trending", searchH.Trending)
 	v1.GET("/hashtags/:tag/products", productH.HashtagProducts)
 
+	// Categories — public
 	v1.GET("/categories", masterdataH.ListCategories)
 	v1.GET("/categories/:slug", masterdataH.GetCategory)
 	v1.GET("/categories/:slug/children", masterdataH.GetCategoryChildren)
 
+	// Hashtags
 	v1.GET("/hashtags/trending", masterdataH.TrendingHashtags)
 	v1.GET("/hashtags/suggest", masterdataH.SuggestHashtags)
 
+	// Sellers
 	v1.GET("/sellers/:id", sellerH.GetProfile)
 	v1.GET("/sellers/:id/products", sellerH.GetProducts)
 	v1.GET("/sellers/:id/reviews", sellerH.GetReviews)
 	v1.GET("/sellers/:id/stats", sellerH.GetStats)
 
-	// Community & Blog — public routes
+	// Community & Blog — public
 	v1.GET("/community", blogH.CommunityFeed)
 	v1.GET("/blog/posts", blogH.ListPosts)
 	v1.GET("/blog/posts/:slug", blogH.GetPost)
 	v1.GET("/blog/reports", blogH.ListTrendReports)
 	v1.GET("/blog/hashtags/:tag", blogH.HashtagPosts)
 
+	// Categories & Blog — protected
 	protected := v1.Group("")
 	protected.Use(auth.Required())
-	{
-		protected.POST("/products", productH.Create)
-		protected.PUT("/products/:id", productH.Update)
-		protected.DELETE("/products/:id", productH.Delete)
-		protected.POST("/products/:id/submit", productH.Submit)
-		protected.POST("/products/:id/resubmit", productH.Resubmit)
-		protected.POST("/products/:id/archive", productH.Archive)
-		protected.POST("/products/:id/unarchive", productH.Unarchive)
+	protected.POST("/categories", hmw.RequirePermission("category.create"), masterdataH.CreateCategory)
+	protected.PUT("/categories/:id", hmw.RequirePermission("category.update"), masterdataH.UpdateCategory)
+	protected.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.ToggleCategory)
+	protected.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.DeleteCategory)
+	protected.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.ReorderCategories)
 
-		protected.POST("/categories", hmw.RequirePermission("category.create"), masterdataH.CreateCategory)
-		protected.PUT("/categories/:id", hmw.RequirePermission("category.update"), masterdataH.UpdateCategory)
-		protected.PUT("/categories/:id/toggle", hmw.RequirePermission("category.manage"), masterdataH.ToggleCategory)
-		protected.DELETE("/categories/:id", hmw.RequirePermission("category.delete"), masterdataH.DeleteCategory)
-		protected.PUT("/categories/reorder", hmw.RequirePermission("category.manage"), masterdataH.ReorderCategories)
+	protected.POST("/blog/posts", hmw.RequirePermission("blog.create"), blogH.CreatePost)
+	protected.PUT("/blog/posts/:id", hmw.RequirePermission("blog.update"), blogH.UpdatePost)
+	protected.DELETE("/blog/posts/:id", hmw.RequirePermission("blog.delete"), blogH.DeletePost)
+	protected.POST("/blog/posts/:id/publish", hmw.RequirePermission("blog.publish"), blogH.PublishPost)
+}
 
-		protected.POST("/blog/posts", hmw.RequirePermission("blog.create"), blogH.CreatePost)
-		protected.PUT("/blog/posts/:id", hmw.RequirePermission("blog.update"), blogH.UpdatePost)
-		protected.DELETE("/blog/posts/:id", hmw.RequirePermission("blog.delete"), blogH.DeletePost)
-		protected.POST("/blog/posts/:id/publish", hmw.RequirePermission("blog.publish"), blogH.PublishPost)
+// startSyncConsumer launches the Kafka→ES product sync consumer in a goroutine if conditions are met.
+func startSyncConsumer(ctx context.Context, cfg *config.Config, conns *Connections, productRepo port.ProductRepository) {
+	if len(cfg.Kafka.Brokers()) == 0 || conns.Elasticsearch == nil {
+		return
 	}
-
-	serviceName := strings.TrimSpace(cfg.Observability.ServiceName)
-	if serviceName == "" {
-		serviceName = strings.TrimSpace(cfg.App.Name)
+	kafkaCfg := &pkgkafka.Config{
+		Brokers:         cfg.Kafka.Brokers(),
+		ClientID:        cfg.Kafka.ClientID,
+		ConsumerGroupID: cfg.Kafka.ConsumerGroup,
 	}
-	if serviceName == "" {
-		serviceName = "core-service"
+	var opts []pkgkafka.ServiceOption
+	if cfg.Kafka.Env != "" {
+		resolver := localkafka.NewEnvTopicResolver(cfg.Kafka.Env,
+			localkafka.TopicProductCreated,
+			localkafka.TopicProductUpdated,
+			localkafka.TopicProductDeleted,
+		)
+		opts = append(opts, pkgkafka.WithTopicResolver(resolver))
 	}
-	httpHandler := loggingmw.HTTPMiddleware(serviceName, router, &loggingmw.HttpLoggingOptions{
-		ExceptRoutes: []string{"/health", "/swagger", "/swagger/index.html"},
-	})
+	ks, err := pkgkafka.NewKafkaService(kafkaCfg, opts...)
+	if err != nil {
+		return
+	}
+	syncConsumer := consumer.NewSyncProductConsumer(conns.Elasticsearch, productRepo)
+	go func() {
+		if err := ks.StartConsumer(ctx, []pkgkafka.ConsumerHandler{syncConsumer}); err != nil {
+			logger.Error(ctx, "sync consumer stopped", err)
+		}
+	}()
+}
 
-	addr := cfg.App.ListenAddr()
-	srv := &http.Server{
-		Addr:         addr,
-		Handler:      httpHandler,
+// newHTTPServer creates the http.Server with timeouts from config.
+func newHTTPServer(cfg *config.Config, h http.Handler) *http.Server {
+	return &http.Server{
+		Addr:         cfg.App.ListenAddr(),
+		Handler:      h,
 		ReadTimeout:  cfg.App.GetReadTimeout(),
 		WriteTimeout: cfg.App.GetWriteTimeout(),
 		IdleTimeout:  cfg.App.GetIdleTimeout(),
 	}
+}
 
-	logger.Info(context.Background(), "application routes registered", logging.String("addr", addr))
-
-	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 && conns.Elasticsearch != nil {
-		ks, err := kafkapkg.NewKafkaService(&kafkapkg.KafkaConfig{
-			Brokers:         cfg.Kafka.Brokers(),
-			ClientID:        cfg.Kafka.ClientID,
-			ConsumerGroupID: cfg.Kafka.ConsumerGroup,
-		}, cfg.Kafka.Env)
-		if err == nil {
-			syncConsumer := consumer.NewSyncProductConsumer(conns.Elasticsearch, productRepo)
-			go func() {
-				if err := ks.StartConsumer(ctx, []kafkapkg.ConsumerHandler{syncConsumer}); err != nil {
-					logger.Error(ctx, "sync consumer stopped", err)
-				}
-			}()
-		}
+func resolveServiceName(cfg *config.Config) string {
+	if name := strings.TrimSpace(cfg.Observability.ServiceName); name != "" {
+		return name
 	}
-
-	return &Application{HTTPServer: srv}, nil
+	if name := strings.TrimSpace(cfg.App.Name); name != "" {
+		return name
+	}
+	return "core-service"
 }

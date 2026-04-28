@@ -37,7 +37,12 @@
       "Bash(sed -n '50,70p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/saved/saved.screen.tsx)",
       "Bash(sed -n '55,70p' /Users/vanthuongdao/Documents/INDIVIDUAL-PROJECTS/modami-system/fe-modami-mobile-service/src/screens/seller/seller-detail.screen.tsx)",
       "Bash(find:*)",
-      "Bash(go build:*)"
+      "Bash(go build:*)",
+      "Bash(sed:*)",
+      "Bash(go mod:*)",
+      "Bash(go get:*)",
+      "Bash(go vet:*)",
+      "Bash(make build:*)"
     ]
   }
 }

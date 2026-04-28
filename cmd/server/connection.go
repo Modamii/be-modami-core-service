@@ -3,29 +3,31 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"be-modami-core-service/config"
-	"be-modami-core-service/pkg/elasticsearch"
-	"be-modami-core-service/pkg/storage/database/mongodb"
-	redisstorage "be-modami-core-service/pkg/storage/redis"
+	localkafka "be-modami-core-service/pkg/kafka"
 
-	"github.com/redis/go-redis/v9"
-	"github.com/twmb/franz-go/pkg/kgo"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	pkges "gitlab.com/lifegoeson-libs/pkg-gokit/elasticsearch"
+	pkgkafka "gitlab.com/lifegoeson-libs/pkg-gokit/kafka"
+	pkgmongo "gitlab.com/lifegoeson-libs/pkg-gokit/mongodb"
+	pkgredis "gitlab.com/lifegoeson-libs/pkg-gokit/redis"
+	logging "gitlab.com/lifegoeson-libs/pkg-logging"
+	"gitlab.com/lifegoeson-libs/pkg-logging/logger"
+	mongodri "go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 // Connections holds infrastructure clients. Optional fields are nil when disabled or on error (caller may log).
 type Connections struct {
-	DB            *mongo.Database
-	Redis         *redis.Client
-	Kafka         *kgo.Client
-	Elasticsearch *elasticsearch.Client
-
+	DB            *mongodri.Database
+	Redis         pkgredis.CachePort
+	Kafka         *pkgkafka.KafkaService
+	Elasticsearch *pkges.Client
 	closeMongo func()
 }
 
 func newConnections(ctx context.Context, cfg *config.Config) (*Connections, error) {
-	db, disconnectMongo, err := mongodb.Connect(ctx, cfg.Mongo.URI, cfg.Mongo.Database)
+	db, disconnectMongo, err := pkgmongo.Connect(ctx, cfg.Mongo.URI, cfg.Mongo.Database)
 	if err != nil {
 		return nil, fmt.Errorf("mongo: %w", err)
 	}
@@ -34,38 +36,51 @@ func newConnections(ctx context.Context, cfg *config.Config) (*Connections, erro
 		closeMongo: disconnectMongo,
 	}
 
+	// Redis
 	if cfg.Redis.Host != "" {
-		rcfg := redisstorage.RedisConfig{
-			Addr:         cfg.Redis.Addr(),
-			Password:     cfg.Redis.Pass,
-			DB:           cfg.Redis.Database,
-			PoolSize:     cfg.Redis.PoolSize,
-			DialTimeout:  cfg.Redis.DialTimeout,
-			ReadTimeout:  cfg.Redis.ReadTimeout,
-			WriteTimeout: cfg.Redis.WriteTimeout,
+		redisCfg := pkgredis.Config{
+			Addrs:       []string{fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)},
+			Password:    cfg.Redis.Pass,
+			DB:          cfg.Redis.Database,
+			PoolSize:    cfg.Redis.PoolSize,
+			DialTimeout: 5 * time.Second,
 		}
-		rcli, err := redisstorage.NewRedisClient(rcfg)
+		adapter, err := pkgredis.NewAdapter(redisCfg)
 		if err != nil {
-			disconnectMongo()
-			return nil, fmt.Errorf("redis: %w", err)
+			logger.Warn(ctx, "failed to connect to Redis, cache features will be disabled", logging.Any("error", err.Error()))
+		} else {
+			c.Redis = adapter
+			logger.Info(ctx, "Redis connected", logging.String("addr", fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)))
 		}
-		c.Redis = rcli
+	} else {
+		logger.Warn(ctx, "redis host not set, cache features will be disabled")
 	}
 
-	if cfg.Kafka.Enable && len(cfg.Kafka.Brokers()) > 0 {
-		kcl, err := kgo.NewClient(
-			kgo.SeedBrokers(cfg.Kafka.Brokers()...),
-			kgo.ClientID(cfg.Kafka.ClientID),
-		)
+	if len(cfg.Kafka.Brokers()) > 0 {
+		kafkaCfg := &pkgkafka.Config{
+			Brokers:          cfg.Kafka.Brokers(),
+			ClientID:         cfg.Kafka.ClientID,
+			ProducerOnlyMode: true,
+		}
+		var opts []pkgkafka.ServiceOption
+		if cfg.Kafka.Env != "" {
+			resolver := localkafka.NewEnvTopicResolver(cfg.Kafka.Env,
+				localkafka.TopicProductCreated,
+				localkafka.TopicProductUpdated,
+				localkafka.TopicProductDeleted,
+			)
+			opts = append(opts, pkgkafka.WithTopicResolver(resolver))
+		}
+		ks, err := pkgkafka.NewKafkaService(kafkaCfg, opts...)
 		if err != nil {
 			c.closeAll(ctx)
 			return nil, fmt.Errorf("kafka: %w", err)
 		}
-		c.Kafka = kcl
+		c.Kafka = ks
 	}
 
-	if cfg.Elasticsearch.Enable && cfg.Elasticsearch.URL != "" {
-		es, err := elasticsearch.NewClient(&elasticsearch.Config{
+	if cfg.Elasticsearch.URL != "" {
+		es, err := pkges.Connect(ctx, pkges.Config{
 			URL:      cfg.Elasticsearch.URL,
 			Username: cfg.Elasticsearch.Username,
 			Password: cfg.Elasticsearch.Password,
@@ -90,32 +105,17 @@ func (c *Connections) closeAll(ctx context.Context) {
 		c.closeMongo = nil
 	}
 	if c.Redis != nil {
-		_ = redisstorage.CloseRedis(ctx, c.Redis)
+		_ = c.Redis.Close()
 		c.Redis = nil
 	}
 	if c.Kafka != nil {
-		c.Kafka.Close()
+		_ = c.Kafka.Close()
 		c.Kafka = nil
 	}
 	c.Elasticsearch = nil
 }
 
-// Disconnect releases all resources (Mongo, Redis, Kafka).
+// Disconnect releases all resources.
 func (c *Connections) Disconnect(ctx context.Context) {
-	if c == nil {
-		return
-	}
-	if c.closeMongo != nil {
-		c.closeMongo()
-		c.closeMongo = nil
-	}
-	if c.Redis != nil {
-		_ = redisstorage.CloseRedis(ctx, c.Redis)
-		c.Redis = nil
-	}
-	if c.Kafka != nil {
-		c.Kafka.Close()
-		c.Kafka = nil
-	}
-	c.Elasticsearch = nil
+	c.closeAll(ctx)
 }
