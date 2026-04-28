@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"be-modami-core-service/config"
 	_ "be-modami-core-service/docs" // swagger generated
@@ -154,9 +153,7 @@ func buildRouter(cfg *config.Config, svcs *appServices) http.Handler {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	registerRoutes(r.Group("/v1/core-services"), auth, productH, masterdataH, sellerH, searchH, blogH, homeFeedH)
-
-	serviceName := resolveServiceName(cfg)
-	return loggingmw.HTTPMiddleware(serviceName, r, &loggingmw.HttpLoggingOptions{
+	return loggingmw.HTTPMiddleware(cfg.Observability.ServiceName, r, &loggingmw.HttpLoggingOptions{
 		ExceptRoutes: []string{"/health", "/swagger", "/swagger/index.html"},
 	})
 }
@@ -280,14 +277,4 @@ func newHTTPServer(cfg *config.Config, h http.Handler) *http.Server {
 		WriteTimeout: cfg.App.GetWriteTimeout(),
 		IdleTimeout:  cfg.App.GetIdleTimeout(),
 	}
-}
-
-func resolveServiceName(cfg *config.Config) string {
-	if name := strings.TrimSpace(cfg.Observability.ServiceName); name != "" {
-		return name
-	}
-	if name := strings.TrimSpace(cfg.App.Name); name != "" {
-		return name
-	}
-	return "core-service"
 }
