@@ -29,12 +29,10 @@ import (
 	mongodri "go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-// Application holds the running HTTP server.
 type Application struct {
 	HTTPServer *http.Server
 }
 
-// appRepos groups all MongoDB repository instances.
 type appRepos struct {
 	product         port.ProductRepository
 	category        port.CategoryRepository
@@ -47,7 +45,6 @@ type appRepos struct {
 	blog            port.BlogRepository
 }
 
-// appServices groups all domain service instances.
 type appServices struct {
 	product    *service.ProductService
 	masterdata *service.MasterdataService
@@ -72,7 +69,6 @@ func newApplication(ctx context.Context, cfg *config.Config, conns *Connections)
 	return &Application{HTTPServer: srv}, nil
 }
 
-// initRepositories constructs all MongoDB repository adapters.
 func initRepositories(db *mongodri.Database) *appRepos {
 	return &appRepos{
 		product:         repository.NewProductRepository(db),
@@ -87,7 +83,6 @@ func initRepositories(db *mongodri.Database) *appRepos {
 	}
 }
 
-// initServices wires domain services from repositories, cache, and producer.
 func initServices(repos *appRepos, cache pkgredis.CachePort, prod port.ProductProducer) *appServices {
 	return &appServices{
 		product:    service.NewProductService(repos.product, repos.category, cache, prod),
@@ -98,7 +93,6 @@ func initServices(repos *appRepos, cache pkgredis.CachePort, prod port.ProductPr
 	}
 }
 
-// newKafkaProducer creates a Kafka producer if Kafka is enabled; returns nil otherwise.
 func newKafkaProducer(cfg *config.Config) port.ProductProducer {
 	if len(cfg.Kafka.Brokers()) == 0 {
 		return nil
@@ -124,7 +118,6 @@ func newKafkaProducer(cfg *config.Config) port.ProductProducer {
 	return producer.NewProductProducer(ks)
 }
 
-// buildRouter constructs the Gin engine with all middleware and routes registered.
 func buildRouter(cfg *config.Config, svcs *appServices) http.Handler {
 	if !cfg.App.Debug && cfg.Observability.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
